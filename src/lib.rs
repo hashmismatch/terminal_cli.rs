@@ -53,13 +53,8 @@
 //! let autocomplete = cli_try_autocomplete("", commands.as_mut_slice());
 //! ```
 
-#![feature(no_std)]
-#![feature(macro_reexport)]
-#![feature(unboxed_closures)]
-#![feature(collections)]
-
 #![no_std]
-#![feature(core)]
+#![feature(core, alloc, no_std, macro_reexport, unboxed_closures, collections, convert)]
 
 extern crate core;
 extern crate alloc;
