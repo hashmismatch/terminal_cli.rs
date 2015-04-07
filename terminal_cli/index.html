@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `terminal_cli` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, terminal_cli">
+
+    <title>terminal_cli - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <section class="sidebar">
+        
+        <p class='location'></p><script>window.sidebarCurrent = {name: 'terminal_cli', ty: 'mod', relpath: '../'};</script>
+    </section>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press 'S' to search, '?' for more options..."
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>terminal_cli</a><wbr></span><span class='out-of-band'><a href='stability.html'>[stability]</a> <span id='render-detail'>
+            <a id="collapse-all" href="#">[-]</a>&nbsp;<a id="expand-all" href="#">[+]</a>
+        </span><a id='src-0' href='../src/terminal_cli/lib.rs.html#1-86'>[src]</a></span></h1>
+<div class='docblock'><p>A helper library for implementing low-level terminal command line interfaces,
+like those on embedded bare-bones environments with UART ports.</p>
+
+<p>The library doesn&#39;t use Rust&#39;s <code>std</code> library, but requires the <code>alloc</code>
+and <code>collections</code> libraries for heap memory allocation and vector manipulation.</p>
+
+<p>Custom commands can be easily added by implementing the <code>CliCommand</code> trait.</p>
+
+<h1 id="example" class='section-header'><a
+                           href="#example">Example</a></h1><pre id='rust-example-rendered' class='rust '>
+<span class='kw'>let</span> <span class='ident'>help</span> <span class='op'>=</span> <span class='ident'>CliCommandKeyword</span> {
+    <span class='ident'>keyword</span>: <span class='string'>&quot;help&quot;</span>.<span class='ident'>to_string</span>(),
+    <span class='ident'>action</span>: <span class='op'>|</span><span class='ident'>line</span>, <span class='ident'>cli</span><span class='op'>|</span> {
+        <span class='ident'>cli</span>.<span class='ident'>output_line</span>(<span class='string'>&quot;Help here!&quot;</span>);
+    }
+};
+
+<span class='comment'>// Adds &quot;set time &lt;HH:mm&gt;&quot; and &quot;get time&quot; commands. No parsing here.</span>
+<span class='kw'>let</span> <span class='ident'>time</span> <span class='op'>=</span> <span class='ident'>CliPropertyVar</span> {
+    <span class='ident'>var_name</span>: <span class='string'>&quot;time&quot;</span>.<span class='ident'>to_string</span>(),
+    <span class='ident'>var_value</span>: <span class='string'>&quot;11:15&quot;</span>.<span class='ident'>to_string</span>(),
+    <span class='ident'>val_hint</span>: <span class='string'>&quot;HH:mm&quot;</span>.<span class='ident'>to_string</span>(),
+ 
+    <span class='ident'>var_output</span>: <span class='op'>|</span><span class='ident'>v</span><span class='op'>|</span> { <span class='ident'>v</span>.<span class='ident'>to_string</span>() },
+    <span class='ident'>var_input</span>: <span class='op'>|</span><span class='ident'>v</span><span class='op'>|</span> {
+        <span class='kw'>if</span> <span class='ident'>v</span>.<span class='ident'>len</span>() <span class='op'>&gt;</span> <span class='number'>0</span> { <span class='prelude-val'>Some</span>(<span class='ident'>v</span>.<span class='ident'>to_string</span>()) }
+        <span class='kw'>else</span> { <span class='prelude-val'>None</span> }
+    }
+};
+ 
+<span class='comment'>// For this test, a ```stdout``` terminal. Isn&#39;t included in the </span>
+<span class='comment'>// library as it&#39;s meant for bare-bones usage - no std library.</span>
+<span class='kw'>struct</span> <span class='ident'>StdoutTerminal</span>;
+<span class='kw'>impl</span> <span class='ident'>CliTerminal</span> <span class='kw'>for</span> <span class='ident'>StdoutTerminal</span> {
+    <span class='kw'>fn</span> <span class='ident'>output_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>line</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) {
+        <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;{}&quot;</span>, <span class='ident'>line</span>);
+    }
+}
+
+<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>commands</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[
+    <span class='ident'>Box</span>::<span class='ident'>new</span>(<span class='ident'>help</span>) <span class='kw'>as</span> <span class='ident'>Box</span><span class='op'>&lt;</span><span class='ident'>CliCommand</span><span class='op'>&gt;</span>,
+    <span class='ident'>Box</span>::<span class='ident'>new</span>(<span class='ident'>time</span>) <span class='kw'>as</span> <span class='ident'>Box</span><span class='op'>&lt;</span><span class='ident'>CliCommand</span><span class='op'>&gt;</span>
+];
+ 
+<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>term</span> <span class='op'>=</span> <span class='ident'>StdoutTerminal</span>;
+ 
+<span class='comment'>// Execute a line buffer</span>
+<span class='ident'>cli_execute</span>(<span class='string'>&quot;help&quot;</span>, <span class='ident'>commands</span>.<span class='ident'>as_mut_slice</span>(), <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>term</span>);
+ 
+<span class='comment'>// Try to autocomplete the active buffer. Will return a summary of all commands.</span>
+<span class='kw'>let</span> <span class='ident'>autocomplete</span> <span class='op'>=</span> <span class='ident'>cli_try_autocomplete</span>(<span class='string'>&quot;&quot;</span>, <span class='ident'>commands</span>.<span class='ident'>as_mut_slice</span>());
+</pre>
+</div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='struct' href='struct.AutocompleteLine.html'
+                               title='terminal_cli::AutocompleteLine'>AutocompleteLine</a></td>
+                        <td class='docblock short'><p>One autocomplete suggestion</p>
+</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='struct' href='struct.CliCommandKeyword.html'
+                               title='terminal_cli::CliCommandKeyword'>CliCommandKeyword</a></td>
+                        <td class='docblock short'><p>Simple keyword command, like <code>help</code> with no arguments.</p>
+</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='struct' href='struct.CliPropertyFn.html'
+                               title='terminal_cli::CliPropertyFn'>CliPropertyFn</a></td>
+                        <td class='docblock short'><p>Retrieved property that can be changed with <code>set var_name &lt;value&gt;</code> and retrieved with
+<code>get var_name</code>. Useful for values that are changed by other parts of the system, like RTC
+clock or some other counter.</p>
+</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='struct' href='struct.CliPropertyVar.html'
+                               title='terminal_cli::CliPropertyVar'>CliPropertyVar</a></td>
+                        <td class='docblock short'><p>Owned property that can be changed with <code>set var_name &lt;value&gt;</code> and retrieved with
+<code>get var_name</code>.</p>
+</td>
+                    </tr>
+                </table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='enum' href='enum.AutocompleteOption.html'
+                               title='terminal_cli::AutocompleteOption'>AutocompleteOption</a></td>
+                        <td class='docblock short'><p>A command&#39;s hints to the autocompletition</p>
+</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='enum' href='enum.AutocompleteResult.html'
+                               title='terminal_cli::AutocompleteResult'>AutocompleteResult</a></td>
+                        <td class='docblock short'><p>Result of the autocomplete request on a given set of commands</p>
+</td>
+                    </tr>
+                </table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='trait' href='trait.CliCommand.html'
+                               title='terminal_cli::CliCommand'>CliCommand</a></td>
+                        <td class='docblock short'><p>A command that can be executed by the execution function.</p>
+</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='trait' href='trait.CliTerminal.html'
+                               title='terminal_cli::CliTerminal'>CliTerminal</a></td>
+                        <td class='docblock short'><p>Terminal trait.</p>
+</td>
+                    </tr>
+                </table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='fn' href='fn.cli_execute.html'
+                               title='terminal_cli::cli_execute'>cli_execute</a></td>
+                        <td class='docblock short'><p>Execute the given line buffer with the set of commands.</p>
+</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='fn' href='fn.cli_try_autocomplete.html'
+                               title='terminal_cli::cli_try_autocomplete'>cli_try_autocomplete</a></td>
+                        <td class='docblock short'><p>Collect autocomplete suggestions for this line buffer</p>
+</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='fn' href='fn.format_in_columns.html'
+                               title='terminal_cli::format_in_columns'>format_in_columns</a></td>
+                        <td class='docblock short'><p>Formats the strings in autocomplete-style column notation. Adds spaces in between.
+Preserves the ordering. Last line will contain the newline sequence.</p>
+</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='fn' href='fn.longest_common_prefix.html'
+                               title='terminal_cli::longest_common_prefix'>longest_common_prefix</a></td>
+                        <td class='docblock short'><p>A naive implementation. Can be implemented with a trie, but it&#39;s overkill here.
+<a href="http://en.wikipedia.org/wiki/LCP_array">http://en.wikipedia.org/wiki/LCP_array</a></p>
+</td>
+                    </tr>
+                </table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <div id="help" class="hidden">
+        <div class="shortcuts">
+            <h1>Keyboard shortcuts</h1>
+            <dl>
+                <dt>?</dt>
+                <dd>Show this help dialog</dd>
+                <dt>S</dt>
+                <dd>Focus the search field</dd>
+                <dt>&larrb;</dt>
+                <dd>Move up in search results</dd>
+                <dt>&rarrb;</dt>
+                <dd>Move down in search results</dd>
+                <dt>&#9166;</dt>
+                <dd>Go to active search result</dd>
+            </dl>
+        </div>
+        <div class="infos">
+            <h1>Search tricks</h1>
+            <p>
+                Prefix searches with a type followed by a colon (e.g.
+                <code>fn:</code>) to restrict the search to a given type.
+            </p>
+            <p>
+                Accepted types are: <code>fn</code>, <code>mod</code>,
+                <code>struct</code>, <code>enum</code>,
+                <code>trait</code>, <code>typedef</code> (or
+                <code>tdef</code>).
+            </p>
+        </div>
+    </div>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "terminal_cli";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script async src="../search-index.js"></script>
+</body>
+</html>

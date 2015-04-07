@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["format_in_columns","Formats the strings in autocomplete-style column notation. Adds spaces in between. Preserves the ordering. Last line will contain the newline sequence."],["longest_common_prefix","A naive implementation. Can be implemented with a trie, but it's overkill here. http://en.wikipedia.org/wiki/LCP_array"]]});
