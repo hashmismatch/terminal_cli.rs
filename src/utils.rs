@@ -47,7 +47,7 @@ pub fn longest_common_prefix(strings: &[&str]) -> Option<String> {
 /// # Example
 ///
 /// ```
-/// # use cli::*;
+/// # use terminal_cli::*;
 /// let s = vec!["A1", "A2", "A3", "B1", "B2", "C1", "C2"];
 /// let f = format_in_columns(s.as_slice(), 26, 10, "\r\n");
 /// println!("{}", f);

@@ -9,7 +9,7 @@
 //! # Example
 //!
 //! ```
-//! # use cli::*;
+//! # use terminal_cli::*;
 //! let help = CliCommandKeyword {
 //! 	keyword: "help".to_string(),
 //! 	action: |line, cli| {
