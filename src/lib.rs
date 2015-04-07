@@ -9,6 +9,7 @@
 //! # Example
 //!
 //! ```
+//! #![feature(convert)]
 //! # use terminal_cli::*;
 //! let help = CliCommandKeyword {
 //! 	keyword: "help".to_string(),
