@@ -1,4 +1,4 @@
-# terminal-cli
+# terminal_cli.rs
 
 Low-level, no-std library for implementing terminal command line interfaces in embedded environments. With autocomplete support.
 
