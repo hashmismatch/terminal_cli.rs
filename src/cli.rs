@@ -66,7 +66,7 @@ pub fn cli_execute(line: &str, cmds: &mut [Box<CliCommand + 'static>], cli: &mut
 			// sort the lines
 			hints.sort_by(|a, b| { a.cmp(&b) });
 
-			cli.output_line(format!("Related commands: {}", hints.connect(", ")).as_slice());
+			cli.output_line(format!("Related commands: {}", hints.connect(", ")).as_str());
 		}
 	}
 }
@@ -150,7 +150,7 @@ pub fn cli_try_autocomplete(line: &str, cmds: &mut [Box<CliCommand + 'static>]) 
 			let lcp = {
 				let mut strings = Vec::new();
 				for m in lines.iter() {
-					strings.push(m.full_new_line.as_slice());
+					strings.push(m.full_new_line.as_str());
 				}
 
 				let lcp = longest_common_prefix(strings.as_slice());

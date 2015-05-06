@@ -105,8 +105,8 @@ trait CliProperty {
 	}	
 
 	fn _is_match(&self, line: &str) -> bool {
-		if line.starts_with(self.set_prefix().as_slice()) ||
-	       line.starts_with(self.get_prefix().as_slice()) {
+		if line.starts_with(self.set_prefix().as_str()) ||
+	       line.starts_with(self.get_prefix().as_str()) {
 			true
 		} else {
 			false
@@ -116,19 +116,19 @@ trait CliProperty {
 
 impl<T, Fo, Fi> CliProperty for CliPropertyVar<T, Fo, Fi> where Fo: Fn(&T) -> String, Fi: Fn(&str) -> Option<T> {
 	fn get_var_name(&self) -> &str {
-		self.var_name.as_slice()
+		self.var_name.as_str()
 	}
 	fn get_val_hint(&self) -> &str {
-		self.val_hint.as_slice()
+		self.val_hint.as_str()
 	}
 }
 
 impl<Fo, Fi> CliProperty for CliPropertyFn<Fo, Fi> where Fo: Fn() -> String, Fi: Fn(&str, &mut CliTerminal) -> () {
 	fn get_var_name(&self) -> &str {
-		self.var_name.as_slice()
+		self.var_name.as_str()
 	}
 	fn get_val_hint(&self) -> &str {
-		self.val_hint.as_slice()
+		self.val_hint.as_str()
 	}
 }
 
@@ -137,13 +137,13 @@ impl<T, Fo, Fi> CliCommand for CliPropertyVar<T, Fo, Fi>
 	where Fo: Fn(&T) -> String, Fi: Fn(&str) -> Option<T>
 {
 	fn execute(&mut self, cli: &mut CliTerminal, line: &str) {
-		if line.starts_with(self.get_prefix().as_slice()) {
+		if line.starts_with(self.get_prefix().as_str()) {
 			let d = self.var_output.call((&self.var_value,));
-			cli.output_line(format!("{} = {}", self.var_name, d).as_slice());
+			cli.output_line(format!("{} = {}", self.var_name, d).as_str());
 		}
 
 		let set_pref = self.set_prefix();
-		let set_pref = set_pref.as_slice();
+		let set_pref = set_pref.as_str();
 		
 		if line.starts_with(&set_pref) {
 
@@ -177,13 +177,13 @@ impl<T, Fo, Fi> CliCommand for CliPropertyVar<T, Fo, Fi>
 impl<Fo, Fi> CliCommand for CliPropertyFn<Fo, Fi> where Fo: Fn() -> String, Fi: Fn(&str, &mut CliTerminal) {
 
 	fn execute(&mut self, cli: &mut CliTerminal, line: &str) {
-		if line.starts_with(self.get_prefix().as_slice()) {
+		if line.starts_with(self.get_prefix().as_str()) {
 			let d = self.var_output.call(());
-			cli.output_line(format!("{} = {}", self.var_name, d).as_slice());
+			cli.output_line(format!("{} = {}", self.var_name, d).as_str());
 		}
 
 		let set_pref = self.set_prefix();
-		let set_pref = set_pref.as_slice();
+		let set_pref = set_pref.as_str();
 		if line.starts_with(&set_pref) {
 			if line.len() > set_pref.len() {
 				let l = &line[(set_pref.len() + 1)..];

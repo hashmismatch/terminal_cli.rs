@@ -89,13 +89,13 @@ pub fn format_in_columns(strings: &[&str], width: u16, min_spacing: u16, new_lin
 
 				if j < columns-1 {
 					let spaces = (max_len - s.len() as u16) + min_spacing;
-					line.push_str(repeat(" ").take(spaces as usize).collect::<String>().as_slice());
+					line.push_str(repeat(" ").take(spaces as usize).collect::<String>().as_str());
 				}
 			};
 		}
 
 		ret.push_str(new_line);
-		ret.push_str(line.as_slice());
+		ret.push_str(line.as_str());
 	}
 
 	ret.push_str(new_line);
