@@ -72,11 +72,13 @@ extern crate std;
 mod cli;
 mod commands;
 mod utils;
+mod prompt_buffer;
 
 
 pub use cli::*;
 pub use utils::*;
 pub use commands::*;
+pub use prompt_buffer::*;
 
 #[cfg(test)]
 mod tests;
