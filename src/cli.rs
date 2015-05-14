@@ -38,7 +38,7 @@ pub trait CliCommand {
 
 /// Execute the given line buffer with the set of commands.
 pub fn cli_execute(line: &str, cmds: &mut [Box<CliCommand + 'static>], cli: &mut CliTerminal) {
-	let line_start = line.trim();
+	let mut line_start = line.trim();
 	if line_start.len() == 0 { return; }
 
 	for ref mut cmd in cmds.iter_mut() {
@@ -50,7 +50,11 @@ pub fn cli_execute(line: &str, cmds: &mut [Box<CliCommand + 'static>], cli: &mut
 		return;
 	}
 
-	cli.output_line("Unrecognized command.");
+	if line_start.ends_with("?") {
+		line_start = line_start.trim_right_matches("?").trim();
+	} else {
+		cli.output_line("Unrecognized command.");
+	}	
 
 	let fl = collect_options(line_start, cmds);
 
