@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["CliPromptAutocompleteBuffer","Holds the current line buffer for a terminal and its possible autocomplete state."]],"trait":[["CliPromptTerminal",""]]});

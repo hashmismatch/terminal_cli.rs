@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="Source to the Rust file `C:\code\rust\terminal-cli\src\commands.rs`.">
+    <meta name="description" content="Source to the Rust file `src\commands.rs`.">
     <meta name="keywords" content="rust, rustlang, rust-lang">
 
     <title>commands.rs.html -- source</title>
@@ -351,8 +351,8 @@
 	}	
 
 	<span class='kw'>fn</span> <span class='ident'>_is_match</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>line</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
-		<span class='kw'>if</span> <span class='ident'>line</span>.<span class='ident'>starts_with</span>(<span class='self'>self</span>.<span class='ident'>set_prefix</span>().<span class='ident'>as_slice</span>()) <span class='op'>||</span>
-	       <span class='ident'>line</span>.<span class='ident'>starts_with</span>(<span class='self'>self</span>.<span class='ident'>get_prefix</span>().<span class='ident'>as_slice</span>()) {
+		<span class='kw'>if</span> <span class='ident'>line</span>.<span class='ident'>starts_with</span>(<span class='self'>self</span>.<span class='ident'>set_prefix</span>().<span class='ident'>as_str</span>()) <span class='op'>||</span>
+	       <span class='ident'>line</span>.<span class='ident'>starts_with</span>(<span class='self'>self</span>.<span class='ident'>get_prefix</span>().<span class='ident'>as_str</span>()) {
 			<span class='boolval'>true</span>
 		} <span class='kw'>else</span> {
 			<span class='boolval'>false</span>
@@ -362,19 +362,19 @@
 
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span>, <span class='ident'>Fo</span>, <span class='ident'>Fi</span><span class='op'>&gt;</span> <span class='ident'>CliProperty</span> <span class='kw'>for</span> <span class='ident'>CliPropertyVar</span><span class='op'>&lt;</span><span class='ident'>T</span>, <span class='ident'>Fo</span>, <span class='ident'>Fi</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>Fo</span>: <span class='ident'>Fn</span>(<span class='kw-2'>&amp;</span><span class='ident'>T</span>) <span class='op'>-&gt;</span> <span class='ident'>String</span>, <span class='ident'>Fi</span>: <span class='ident'>Fn</span>(<span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
 	<span class='kw'>fn</span> <span class='ident'>get_var_name</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='ident'>str</span> {
-		<span class='self'>self</span>.<span class='ident'>var_name</span>.<span class='ident'>as_slice</span>()
+		<span class='self'>self</span>.<span class='ident'>var_name</span>.<span class='ident'>as_str</span>()
 	}
 	<span class='kw'>fn</span> <span class='ident'>get_val_hint</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='ident'>str</span> {
-		<span class='self'>self</span>.<span class='ident'>val_hint</span>.<span class='ident'>as_slice</span>()
+		<span class='self'>self</span>.<span class='ident'>val_hint</span>.<span class='ident'>as_str</span>()
 	}
 }
 
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>Fo</span>, <span class='ident'>Fi</span><span class='op'>&gt;</span> <span class='ident'>CliProperty</span> <span class='kw'>for</span> <span class='ident'>CliPropertyFn</span><span class='op'>&lt;</span><span class='ident'>Fo</span>, <span class='ident'>Fi</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>Fo</span>: <span class='ident'>Fn</span>() <span class='op'>-&gt;</span> <span class='ident'>String</span>, <span class='ident'>Fi</span>: <span class='ident'>Fn</span>(<span class='kw-2'>&amp;</span><span class='ident'>str</span>, <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>CliTerminal</span>) <span class='op'>-&gt;</span> () {
 	<span class='kw'>fn</span> <span class='ident'>get_var_name</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='ident'>str</span> {
-		<span class='self'>self</span>.<span class='ident'>var_name</span>.<span class='ident'>as_slice</span>()
+		<span class='self'>self</span>.<span class='ident'>var_name</span>.<span class='ident'>as_str</span>()
 	}
 	<span class='kw'>fn</span> <span class='ident'>get_val_hint</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='ident'>str</span> {
-		<span class='self'>self</span>.<span class='ident'>val_hint</span>.<span class='ident'>as_slice</span>()
+		<span class='self'>self</span>.<span class='ident'>val_hint</span>.<span class='ident'>as_str</span>()
 	}
 }
 
@@ -383,13 +383,13 @@
 	<span class='kw'>where</span> <span class='ident'>Fo</span>: <span class='ident'>Fn</span>(<span class='kw-2'>&amp;</span><span class='ident'>T</span>) <span class='op'>-&gt;</span> <span class='ident'>String</span>, <span class='ident'>Fi</span>: <span class='ident'>Fn</span>(<span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>
 {
 	<span class='kw'>fn</span> <span class='ident'>execute</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>cli</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>CliTerminal</span>, <span class='ident'>line</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) {
-		<span class='kw'>if</span> <span class='ident'>line</span>.<span class='ident'>starts_with</span>(<span class='self'>self</span>.<span class='ident'>get_prefix</span>().<span class='ident'>as_slice</span>()) {
+		<span class='kw'>if</span> <span class='ident'>line</span>.<span class='ident'>starts_with</span>(<span class='self'>self</span>.<span class='ident'>get_prefix</span>().<span class='ident'>as_str</span>()) {
 			<span class='kw'>let</span> <span class='ident'>d</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>var_output</span>.<span class='ident'>call</span>((<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>var_value</span>,));
-			<span class='ident'>cli</span>.<span class='ident'>output_line</span>(<span class='macro'>format</span><span class='macro'>!</span>(<span class='string'>&quot;{} = {}&quot;</span>, <span class='self'>self</span>.<span class='ident'>var_name</span>, <span class='ident'>d</span>).<span class='ident'>as_slice</span>());
+			<span class='ident'>cli</span>.<span class='ident'>output_line</span>(<span class='macro'>format</span><span class='macro'>!</span>(<span class='string'>&quot;{} = {}&quot;</span>, <span class='self'>self</span>.<span class='ident'>var_name</span>, <span class='ident'>d</span>).<span class='ident'>as_str</span>());
 		}
 
 		<span class='kw'>let</span> <span class='ident'>set_pref</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>set_prefix</span>();
-		<span class='kw'>let</span> <span class='ident'>set_pref</span> <span class='op'>=</span> <span class='ident'>set_pref</span>.<span class='ident'>as_slice</span>();
+		<span class='kw'>let</span> <span class='ident'>set_pref</span> <span class='op'>=</span> <span class='ident'>set_pref</span>.<span class='ident'>as_str</span>();
 		
 		<span class='kw'>if</span> <span class='ident'>line</span>.<span class='ident'>starts_with</span>(<span class='kw-2'>&amp;</span><span class='ident'>set_pref</span>) {
 
@@ -423,13 +423,13 @@
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>Fo</span>, <span class='ident'>Fi</span><span class='op'>&gt;</span> <span class='ident'>CliCommand</span> <span class='kw'>for</span> <span class='ident'>CliPropertyFn</span><span class='op'>&lt;</span><span class='ident'>Fo</span>, <span class='ident'>Fi</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>Fo</span>: <span class='ident'>Fn</span>() <span class='op'>-&gt;</span> <span class='ident'>String</span>, <span class='ident'>Fi</span>: <span class='ident'>Fn</span>(<span class='kw-2'>&amp;</span><span class='ident'>str</span>, <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>CliTerminal</span>) {
 
 	<span class='kw'>fn</span> <span class='ident'>execute</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>cli</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>CliTerminal</span>, <span class='ident'>line</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) {
-		<span class='kw'>if</span> <span class='ident'>line</span>.<span class='ident'>starts_with</span>(<span class='self'>self</span>.<span class='ident'>get_prefix</span>().<span class='ident'>as_slice</span>()) {
+		<span class='kw'>if</span> <span class='ident'>line</span>.<span class='ident'>starts_with</span>(<span class='self'>self</span>.<span class='ident'>get_prefix</span>().<span class='ident'>as_str</span>()) {
 			<span class='kw'>let</span> <span class='ident'>d</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>var_output</span>.<span class='ident'>call</span>(());
-			<span class='ident'>cli</span>.<span class='ident'>output_line</span>(<span class='macro'>format</span><span class='macro'>!</span>(<span class='string'>&quot;{} = {}&quot;</span>, <span class='self'>self</span>.<span class='ident'>var_name</span>, <span class='ident'>d</span>).<span class='ident'>as_slice</span>());
+			<span class='ident'>cli</span>.<span class='ident'>output_line</span>(<span class='macro'>format</span><span class='macro'>!</span>(<span class='string'>&quot;{} = {}&quot;</span>, <span class='self'>self</span>.<span class='ident'>var_name</span>, <span class='ident'>d</span>).<span class='ident'>as_str</span>());
 		}
 
 		<span class='kw'>let</span> <span class='ident'>set_pref</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>set_prefix</span>();
-		<span class='kw'>let</span> <span class='ident'>set_pref</span> <span class='op'>=</span> <span class='ident'>set_pref</span>.<span class='ident'>as_slice</span>();
+		<span class='kw'>let</span> <span class='ident'>set_pref</span> <span class='op'>=</span> <span class='ident'>set_pref</span>.<span class='ident'>as_str</span>();
 		<span class='kw'>if</span> <span class='ident'>line</span>.<span class='ident'>starts_with</span>(<span class='kw-2'>&amp;</span><span class='ident'>set_pref</span>) {
 			<span class='kw'>if</span> <span class='ident'>line</span>.<span class='ident'>len</span>() <span class='op'>&gt;</span> <span class='ident'>set_pref</span>.<span class='ident'>len</span>() {
 				<span class='kw'>let</span> <span class='ident'>l</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='ident'>line</span>[(<span class='ident'>set_pref</span>.<span class='ident'>len</span>() <span class='op'>+</span> <span class='number'>1</span>)..];

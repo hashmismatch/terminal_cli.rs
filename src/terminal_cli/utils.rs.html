@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="Source to the Rust file `C:\code\rust\terminal-cli\src\utils.rs`.">
+    <meta name="description" content="Source to the Rust file `src\utils.rs`.">
     <meta name="keywords" content="rust, rustlang, rust-lang">
 
     <title>utils.rs.html -- source</title>
@@ -193,6 +193,7 @@
 <span id="151">151</span>
 <span id="152">152</span>
 <span id="153">153</span>
+<span id="154">154</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>core</span>::<span class='ident'>prelude</span>::<span class='op'>*</span>;
 
@@ -243,6 +244,7 @@
 <span class='doccomment'>/// # Example</span>
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// ```</span>
+<span class='doccomment'>/// #![feature(convert)]</span>
 <span class='doccomment'>/// # use terminal_cli::*;</span>
 <span class='doccomment'>/// let s = vec![&quot;A1&quot;, &quot;A2&quot;, &quot;A3&quot;, &quot;B1&quot;, &quot;B2&quot;, &quot;C1&quot;, &quot;C2&quot;];</span>
 <span class='doccomment'>/// let f = format_in_columns(s.as_slice(), 26, 10, &quot;\r\n&quot;);</span>
@@ -284,13 +286,13 @@
 
 				<span class='kw'>if</span> <span class='ident'>j</span> <span class='op'>&lt;</span> <span class='ident'>columns</span><span class='op'>-</span><span class='number'>1</span> {
 					<span class='kw'>let</span> <span class='ident'>spaces</span> <span class='op'>=</span> (<span class='ident'>max_len</span> <span class='op'>-</span> <span class='ident'>s</span>.<span class='ident'>len</span>() <span class='kw'>as</span> <span class='ident'>u16</span>) <span class='op'>+</span> <span class='ident'>min_spacing</span>;
-					<span class='ident'>line</span>.<span class='ident'>push_str</span>(<span class='ident'>repeat</span>(<span class='string'>&quot; &quot;</span>).<span class='ident'>take</span>(<span class='ident'>spaces</span> <span class='kw'>as</span> <span class='ident'>usize</span>).<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span>().<span class='ident'>as_slice</span>());
+					<span class='ident'>line</span>.<span class='ident'>push_str</span>(<span class='ident'>repeat</span>(<span class='string'>&quot; &quot;</span>).<span class='ident'>take</span>(<span class='ident'>spaces</span> <span class='kw'>as</span> <span class='ident'>usize</span>).<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span>().<span class='ident'>as_str</span>());
 				}
 			};
 		}
 
 		<span class='ident'>ret</span>.<span class='ident'>push_str</span>(<span class='ident'>new_line</span>);
-		<span class='ident'>ret</span>.<span class='ident'>push_str</span>(<span class='ident'>line</span>.<span class='ident'>as_slice</span>());
+		<span class='ident'>ret</span>.<span class='ident'>push_str</span>(<span class='ident'>line</span>.<span class='ident'>as_str</span>());
 	}
 
 	<span class='ident'>ret</span>.<span class='ident'>push_str</span>(<span class='ident'>new_line</span>);
