@@ -11,6 +11,8 @@
 //! ```
 //! #![feature(convert)]
 //! # use terminal_cli::*;
+//! # use std::io;
+//! # use std::io::Write;
 //! let help = CliCommandKeyword {
 //! 	keyword: "help".to_string(),
 //! 	action: |line, cli| {
@@ -52,6 +54,25 @@
 //! 
 //! // Try to autocomplete the active buffer. Will return a summary of all commands.
 //! let autocomplete = cli_try_autocomplete("", commands.as_mut_slice());
+//!
+//!
+//! // Serial terminal input handling
+//! struct StdoutPromptOutput;
+//! impl CliPromptTerminal for StdoutPromptOutput {
+//!		fn print_bytes(&self, bytes: &[u8]) {
+//!			io::stdout().write(bytes);
+//!		}
+//! }
+//!
+//! let mut prompt = CliPromptAutocompleteBuffer::new("#".to_string());
+//! // help + newline
+//! let keyboard_input = vec!['h' as u8, 'e' as u8, 'l' as u8, 
+//! 	0x7f /* backspace */, 'l' as u8, 'p' as u8, 0x0d /* \r */ ];
+//! 
+//! for byte in keyboard_input {
+//!		prompt.handle_received_byte(byte, &StdoutPromptOutput,
+//!									commands.as_mut_slice(), &mut term);
+//! }
 //! ```
 
 #![no_std]
