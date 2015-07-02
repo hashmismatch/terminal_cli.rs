@@ -34,10 +34,24 @@ pub trait CliCommand {
 	fn is_match(&self, line: &str) -> bool;
 	/// Give auto-complete hints
 	fn autocomplete(&self, line_start: &str) -> Option<Vec<AutocompleteOption>>;
+
+	fn get_property(&self) -> Option<&(CliStringProperty + 'static)>;
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum CliStringPropertyError {
+	InvalidValue
+}
+
+/// Command that alters the state of a simple string property
+pub trait CliStringProperty {
+	fn get_id(&self) -> &str;
+	fn get_val(&self) -> String;
+	fn set_val(&mut self, new_val: &str) -> Result<(), CliStringPropertyError>;
 }
 
 /// Execute the given line buffer with the set of commands.
-pub fn cli_execute(line: &str, cmds: &mut [Box<CliCommand + 'static>], cli: &mut CliTerminal) {
+pub fn cli_execute(line: &str, cmds: &mut [Box<CliCommand + Send + 'static>], cli: &mut CliTerminal) {
 	let mut line_start = line.trim();
 	if line_start.len() == 0 { return; }
 
@@ -95,7 +109,7 @@ pub struct AutocompleteLine {
 	pub additional_part: String
 }
 
-fn collect_options(line: &str, cmds: &mut [Box<CliCommand + 'static>]) -> Vec<AutocompleteOption> {
+fn collect_options(line: &str, cmds: &mut [Box<CliCommand + Send + 'static>]) -> Vec<AutocompleteOption> {
 	let mut ret = Vec::new();
 	for cmd in cmds.iter() {
 		let options = cmd.autocomplete(line);
@@ -109,7 +123,7 @@ fn collect_options(line: &str, cmds: &mut [Box<CliCommand + 'static>]) -> Vec<Au
 }
 
 /// Collect autocomplete suggestions for this line buffer
-pub fn cli_try_autocomplete(line: &str, cmds: &mut [Box<CliCommand + 'static>]) -> AutocompleteResult {
+pub fn cli_try_autocomplete(line: &str, cmds: &mut [Box<CliCommand + Send + 'static>]) -> AutocompleteResult {
 	// check if any command matches, ignore autocomplete in that case - for now
 	for ref mut cmd in cmds.iter_mut() {
 		if !cmd.is_match(line) {
@@ -183,5 +197,11 @@ pub fn cli_try_autocomplete(line: &str, cmds: &mut [Box<CliCommand + 'static>]) 
 				AutocompleteResult::MultipleMatches { lines: lines }
 			}
 		}
+	}
+}
+
+pub struct CliTerminalNull;
+impl CliTerminal for CliTerminalNull {
+	fn output_line(&mut self, line: &str) {		
 	}
 }

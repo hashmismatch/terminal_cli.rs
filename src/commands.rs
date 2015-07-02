@@ -38,6 +38,10 @@ impl<Fo> CliCommand for CliCommandKeyword<Fo> where Fo: Fn(&str, &mut CliTermina
 			None
 		}
 	}
+
+	fn get_property(&self) -> Option<&(CliStringProperty + 'static)> {
+		None
+	}
 }
 
 /// Owned property that can be changed with ```set var_name <value>``` and retrieved with 
@@ -57,10 +61,15 @@ pub struct CliPropertyVar<T, Fo, Fi> where Fo: Fn(&T) -> String, Fi: Fn(&str) ->
 	pub val_hint: String
 }
 
+#[derive(Debug, Eq, PartialEq)]
+pub enum CliPropertyFnInputError {
+	InvalidValue
+}
+
 /// Retrieved property that can be changed with ```set var_name <value>``` and retrieved with 
 /// ```get var_name```. Useful for values that are changed by other parts of the system, like RTC
 /// clock or some other counter.
-pub struct CliPropertyFn<Fo, Fi> where Fo: Fn() -> String, Fi: Fn(&str, &mut CliTerminal) -> ()
+pub struct CliPropertyFn<Fo, Fi> where Fo: Fn() -> String, Fi: Fn(&str, &mut CliTerminal) -> Result<(), CliPropertyFnInputError>
 {
 	/// Name of the property
 	pub var_name: String,
@@ -123,7 +132,7 @@ impl<T, Fo, Fi> CliProperty for CliPropertyVar<T, Fo, Fi> where Fo: Fn(&T) -> St
 	}
 }
 
-impl<Fo, Fi> CliProperty for CliPropertyFn<Fo, Fi> where Fo: Fn() -> String, Fi: Fn(&str, &mut CliTerminal) -> () {
+impl<Fo, Fi> CliProperty for CliPropertyFn<Fo, Fi> where Fo: Fn() -> String, Fi: Fn(&str, &mut CliTerminal) -> Result<(), CliPropertyFnInputError> {
 	fn get_var_name(&self) -> &str {
 		self.var_name.as_str()
 	}
@@ -171,10 +180,35 @@ impl<T, Fo, Fi> CliCommand for CliPropertyVar<T, Fo, Fi>
 	fn autocomplete(&self, line_start: &str) -> Option<Vec<AutocompleteOption>>  {
 		self._autocomplete(line_start)
 	}
+
+	fn get_property(&self) -> Option<&(CliStringProperty + 'static)> {
+		None
+	}	
+}
+
+impl<T, Fo, Fi> CliStringProperty for CliPropertyVar<T, Fo, Fi>
+	where Fo: Fn(&T) -> String, Fi: Fn(&str) -> Option<T>
+{
+	fn get_id(&self) -> &str {
+		&self.var_name
+	}
+	fn get_val(&self) -> String {
+		self.var_output.call((&self.var_value,))
+	}
+
+	fn set_val(&mut self, new_val: &str) -> Result<(), CliStringPropertyError> {
+		let s = self.var_input.call((new_val,));
+		if s.is_some() {
+			Ok(())
+		} else {
+			Err(CliStringPropertyError::InvalidValue)
+		}
+	}
 }
 
 
-impl<Fo, Fi> CliCommand for CliPropertyFn<Fo, Fi> where Fo: Fn() -> String, Fi: Fn(&str, &mut CliTerminal) {
+impl<Fo, Fi> CliCommand for CliPropertyFn<Fo, Fi>
+	where Fo: Fn() -> String, Fi: Fn(&str, &mut CliTerminal) -> Result<(), CliPropertyFnInputError> {
 
 	fn execute(&mut self, cli: &mut CliTerminal, line: &str) {
 		if line.starts_with(self.get_prefix().as_str()) {
@@ -199,5 +233,30 @@ impl<Fo, Fi> CliCommand for CliPropertyFn<Fo, Fi> where Fo: Fn() -> String, Fi: 
 
 	fn autocomplete(&self, line_start: &str) -> Option<Vec<AutocompleteOption>>  {
 		self._autocomplete(line_start)
+	}
+
+	fn get_property(&self) -> Option<&(CliStringProperty + 'static)> {
+		None
+	}	
+}
+
+
+impl<Fo, Fi> CliStringProperty for CliPropertyFn<Fo, Fi>
+	where Fo: Fn() -> String, Fi: Fn(&str, &mut CliTerminal) -> Result<(), CliPropertyFnInputError>
+{
+	fn get_id(&self) -> &str {
+		&self.var_name
+	}
+
+	fn get_val(&self) -> String {
+		self.var_output.call(())
+	}
+
+	fn set_val(&mut self, new_val: &str) -> Result<(), CliStringPropertyError> {		
+		let s = self.var_input.call((new_val, &mut CliTerminalNull));
+		match s {
+			Err(_) => Err(CliStringPropertyError::InvalidValue),
+			Ok(_) => Ok(())
+		}
 	}
 }

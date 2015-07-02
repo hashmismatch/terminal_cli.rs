@@ -52,10 +52,10 @@ pub fn test_suggest() {
 	};
 	let mut term = StdoutTerminal;
 	let mut commands = vec![
-		Box::new(show) as Box<CliCommand>,
-		Box::new(cs) as Box<CliCommand>,
-		Box::new(ct) as Box<CliCommand>,
-		Box::new(ctt) as Box<CliCommand>
+		Box::new(show) as Box<CliCommand + Send>,
+		Box::new(cs) as Box<CliCommand + Send>,
+		Box::new(ct) as Box<CliCommand + Send>,
+		Box::new(ctt) as Box<CliCommand + Send>
 	];
 	cli_execute("set ", commands.as_mut_slice(), &mut term);
 	let autocomplete = cli_try_autocomplete("", commands.as_mut_slice());

@@ -49,7 +49,7 @@ impl CliPromptAutocompleteBuffer {
 		output.print(self.prompt.as_str());
 	}
 
-	pub fn handle_received_byte<T>(&mut self, byte: u8, output: &T, cmds: &mut [Box<CliCommand + 'static>], cli_terminal: &mut CliTerminal)
+	pub fn handle_received_byte<T>(&mut self, byte: u8, output: &T, cmds: &mut [Box<CliCommand + Send + 'static>], cli_terminal: &mut CliTerminal)
 		where T: CliPromptTerminal
 	{
 		let mut handled_autocomplete = false;

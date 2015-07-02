@@ -43,8 +43,8 @@
 //! }
 //!
 //! let mut commands = vec![
-//! 	Box::new(help) as Box<CliCommand>,
-//! 	Box::new(time) as Box<CliCommand>
+//! 	Box::new(help) as Box<CliCommand + Send>,
+//! 	Box::new(time) as Box<CliCommand + Send>
 //! ];
 //! 
 //! let mut term = StdoutTerminal;
