@@ -39,7 +39,7 @@ impl<Fo> CliCommand for CliCommandKeyword<Fo> where Fo: Fn(&str, &mut CliTermina
 		}
 	}
 
-	fn get_property(&self) -> Option<&(CliStringProperty + 'static)> {
+	fn get_property(&self) -> Option<&CliStringProperty> {
 		None
 	}
 }
@@ -181,8 +181,8 @@ impl<T, Fo, Fi> CliCommand for CliPropertyVar<T, Fo, Fi>
 		self._autocomplete(line_start)
 	}
 
-	fn get_property(&self) -> Option<&(CliStringProperty + 'static)> {
-		None
+	fn get_property(&self) -> Option<&CliStringProperty> {
+		Some(self)
 	}	
 }
 
@@ -235,8 +235,8 @@ impl<Fo, Fi> CliCommand for CliPropertyFn<Fo, Fi>
 		self._autocomplete(line_start)
 	}
 
-	fn get_property(&self) -> Option<&(CliStringProperty + 'static)> {
-		None
+	fn get_property(&self) -> Option<&CliStringProperty> {
+		Some(self)
 	}	
 }
 

@@ -35,7 +35,7 @@ pub trait CliCommand {
 	/// Give auto-complete hints
 	fn autocomplete(&self, line_start: &str) -> Option<Vec<AutocompleteOption>>;
 
-	fn get_property(&self) -> Option<&(CliStringProperty + 'static)>;
+	fn get_property(&self) -> Option<&CliStringProperty>;
 }
 
 #[derive(Debug, PartialEq, Eq)]
