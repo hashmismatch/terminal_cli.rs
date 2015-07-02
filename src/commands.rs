@@ -42,6 +42,9 @@ impl<Fo> CliCommand for CliCommandKeyword<Fo> where Fo: Fn(&str, &mut CliTermina
 	fn get_property(&self) -> Option<&CliStringProperty> {
 		None
 	}
+	fn get_property_mut(&mut self) -> Option<&mut CliStringProperty> {
+		None
+	}	
 }
 
 /// Owned property that can be changed with ```set var_name <value>``` and retrieved with 
@@ -183,7 +186,11 @@ impl<T, Fo, Fi> CliCommand for CliPropertyVar<T, Fo, Fi>
 
 	fn get_property(&self) -> Option<&CliStringProperty> {
 		Some(self)
-	}	
+	}
+	
+	fn get_property_mut(&mut self) -> Option<&mut CliStringProperty> {
+		Some(self)
+	}
 }
 
 impl<T, Fo, Fi> CliStringProperty for CliPropertyVar<T, Fo, Fi>
@@ -237,7 +244,11 @@ impl<Fo, Fi> CliCommand for CliPropertyFn<Fo, Fi>
 
 	fn get_property(&self) -> Option<&CliStringProperty> {
 		Some(self)
-	}	
+	}
+
+	fn get_property_mut(&mut self) -> Option<&mut CliStringProperty> {
+		Some(self)
+	}
 }
 
 

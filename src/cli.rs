@@ -36,6 +36,7 @@ pub trait CliCommand {
 	fn autocomplete(&self, line_start: &str) -> Option<Vec<AutocompleteOption>>;
 
 	fn get_property(&self) -> Option<&CliStringProperty>;
+	fn get_property_mut(&mut self) -> Option<&mut CliStringProperty>;
 }
 
 #[derive(Debug, PartialEq, Eq)]
