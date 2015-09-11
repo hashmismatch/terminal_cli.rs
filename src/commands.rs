@@ -1,14 +1,7 @@
-use core::prelude::*;
-
-use alloc::rc::Rc;
-use alloc::boxed::Box;
-
 use collections::string::*;
 use collections::Vec;
-use collections::slice::SliceConcatExt;
 
 use cli::*;
-use utils::*;
 
 /// Simple keyword command, like ```help``` with no arguments.
 pub struct CliCommandKeyword<Fo> where Fo: Fn(&str, &mut CliTerminal) -> ()  {

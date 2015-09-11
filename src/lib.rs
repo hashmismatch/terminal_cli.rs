@@ -76,9 +76,19 @@
 //! ```
 
 #![no_std]
-#![feature(core, alloc, no_std, macro_reexport, unboxed_closures, collections, convert)]
+#![feature(core)]
+#![feature(alloc)]
+#![feature(no_std)]
+#![feature(macro_reexport)]
+#![feature(unboxed_closures)]
+#![feature(collections)]
+#![feature(convert)]
+#![feature(slice_concat_ext)]
+#![feature(core_float)]
+#![feature(fixed_size_array)]
+#![feature(iter_cmp)]
+#![feature(core_intrinsics)]
 
-extern crate core;
 extern crate alloc;
 
 #[macro_use(vec, format)]

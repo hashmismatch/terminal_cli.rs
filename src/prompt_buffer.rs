@@ -1,11 +1,9 @@
-use core::prelude::*;
 use alloc::boxed::Box;
 
 use collections::Vec;
 use collections::String;
 use collections::string::ToString;
 use collections::string::FromUtf8Error;
-use core::mem;
 use core::array::FixedSizeArray;
 
 use cli::*;
@@ -153,7 +151,7 @@ impl CliPromptAutocompleteBuffer {
 			}
 		}
 
-		if (handled_autocomplete == false) {
+		if handled_autocomplete == false {
 			// reset autocomplete state
 			self.autocomplete = AutocompleteRequest::None;
 		}

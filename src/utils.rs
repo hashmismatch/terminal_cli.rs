@@ -1,12 +1,6 @@
-use core::prelude::*;
-
-use core::num::Float;
-
+use core::intrinsics;
 use core::iter::repeat;
-
 use collections::string::*;
-use collections::Vec;
-use collections::slice::SliceConcatExt;
 
 /// A naive implementation. Can be implemented with a trie, but it's overkill here.
 /// http://en.wikipedia.org/wiki/LCP_array
@@ -66,7 +60,7 @@ pub fn format_in_columns(strings: &[&str], width: u16, min_spacing: u16, new_lin
 	let max_len = strings.iter().max_by(|s| { s.len() }).unwrap().len() as u16;
 
 	let columns = {
-		let c = (width as f32 / (max_len + min_spacing) as f32).floor() as u16;
+		let c = floorf((width as f32 / (max_len + min_spacing) as f32)) as u16;
 		let plus_one_width = ((max_len + min_spacing) * c) + max_len;
 		if plus_one_width <= width {
 			c + 1
@@ -75,7 +69,7 @@ pub fn format_in_columns(strings: &[&str], width: u16, min_spacing: u16, new_lin
 		}
 	};
 
-	let rows = (strings.len() as f32 / columns as f32).ceil() as u16;
+	let rows = ceilf(strings.len() as f32 / columns as f32) as u16;
 	
 	let mut ret = String::new();
 	
@@ -103,12 +97,12 @@ pub fn format_in_columns(strings: &[&str], width: u16, min_spacing: u16, new_lin
 	ret
 }
 
+fn floorf(f: f32) -> f32 { unsafe { intrinsics::floorf32(f) } }
+fn ceilf(f: f32) -> f32 { unsafe { intrinsics::ceilf32(f) } }
+
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use core::prelude::*;
-	use std::prelude::*;
-	use alloc::boxed::*;
 	use collections::string::*;
 
 	#[test]

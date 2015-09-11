@@ -1,6 +1,3 @@
-use core::prelude::*;
-
-use alloc::rc::Rc;
 use alloc::boxed::Box;
 
 use collections::string::*;
