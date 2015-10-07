@@ -1,115 +1,94 @@
-//! A helper library for implementing low-level terminal command line interfaces,
-//! like those on embedded bare-bones environments with UART ports.
+//! A helper library for implementing a low-level terminal command line interface,
+//! like those on embedded bare-bones environments with a UART port.
 //!
 //! The library doesn't use Rust's ```std``` library, but requires the ```alloc```
 //! and ```collections``` libraries for heap memory allocation and vector manipulation.
 //!
-//! Custom commands can be easily added by implementing the ```CliCommand``` trait.
-//!
 //! # Example
 //!
 //! ```
-//! #![feature(convert)]
 //! # use terminal_cli::*;
 //! # use std::io;
 //! # use std::io::Write;
-//! let help = CliCommandKeyword {
-//! 	keyword: "help".to_string(),
-//! 	action: |line, cli| {
-//! 		cli.output_line("Help here!");
-//! 	}
-//! };
 //!
-//! // Adds "set time <HH:mm>" and "get time" commands. No parsing here.
-//! let time = CliPropertyVar {
-//! 	var_name: "time".to_string(),
-//! 	var_value: "11:15".to_string(),
-//! 	val_hint: "HH:mm".to_string(),
+//! // Simple ranged integer property
+//!	//let mut num1 = new_property_min_max("num1".into(), 1 as u8, 1, 100);
+//! let mut num1 = 1;
 //! 
-//! 	var_output: |v| { v.to_string() },
-//! 	var_input: |v| {
-//! 		if v.len() > 0 { Some(v.to_string()) }
-//! 		else { None }
-//! 	}
-//! };
+//! // Rust stdout terminal
+//!	let mut terminal = StdoutTerminal;
+//!	
+//! let options = PromptBufferOptions { echo: true, ..Default::default() };
+//! let mut prompt = PromptBuffer::new(options);
+//!
+//!	let input_keys = [Key::Character('h' as u8), Key::Character('e' as u8), Key::Character('l' as u8), Key::Character('p' as u8),
+//! 				  Key::Newline];
 //! 
-//! // For this test, a ```stdout``` terminal. Isn't included in the 
-//! // library as it's meant for bare-bones usage - no std library.
-//! struct StdoutTerminal;
-//! impl CliTerminal for StdoutTerminal {
-//! 	fn output_line(&mut self, line: &str) {
-//! 		println!("{}", line);
+//! for key in &input_keys {
+//!		let p = prompt.handle_key(*key, &mut terminal, |mut m| {
+//!         if let Some(mut ctx) = m.run_command("help") {
+//!             ctx.get_terminal().print_line("Help!");
+//!         }
+//!
+//!         if let Some(mut ctx) = m.run_property("num1", validate_property_min_max(1, 100)) {
+//!             ctx.apply(&mut num1);
+//!         }
+//!		});
+//!		if let Some(PromptEvent::Break) = p {
+//!			break;
 //! 	}
 //! }
-//!
-//! let mut commands = vec![
-//! 	Box::new(help) as Box<CliCommand + Send>,
-//! 	Box::new(time) as Box<CliCommand + Send>
-//! ];
-//! 
-//! let mut term = StdoutTerminal;
-//! 
-//! // Execute a line buffer
-//! cli_execute("help", commands.as_mut_slice(), &mut term);
-//! 
-//! // Try to autocomplete the active buffer. Will return a summary of all commands.
-//! let autocomplete = cli_try_autocomplete("", commands.as_mut_slice());
-//!
-//!
-//! // Serial terminal input handling
-//! struct StdoutPromptOutput;
-//! impl CliPromptTerminal for StdoutPromptOutput {
-//!		fn print_bytes(&self, bytes: &[u8]) {
-//!			io::stdout().write(bytes);
-//!		}
-//! }
-//!
-//! let mut prompt = CliPromptAutocompleteBuffer::new("#".to_string());
-//! // help + newline
-//! let keyboard_input = vec!['h' as u8, 'e' as u8, 'l' as u8, 
-//! 	0x7f /* backspace */, 'l' as u8, 'p' as u8, 0x0d /* \r */ ];
-//! 
-//! for byte in keyboard_input {
-//!		prompt.handle_received_byte(byte, &StdoutPromptOutput,
-//!									commands.as_mut_slice(), &mut term);
-//! }
+//!	
 //! ```
 
 #![no_std]
-#![feature(core)]
-#![feature(alloc)]
-#![feature(no_std)]
-#![feature(macro_reexport)]
-#![feature(unboxed_closures)]
-#![feature(collections)]
-#![feature(convert)]
-#![feature(slice_concat_ext)]
-#![feature(core_float)]
-#![feature(fixed_size_array)]
-#![feature(iter_cmp)]
-#![feature(core_intrinsics)]
 
+#![cfg_attr(target_os="none", feature(alloc))]
+#![cfg_attr(target_os="none", feature(collections))]
+#![cfg_attr(target_os="none", feature(core_intrinsics))]
+#![cfg_attr(target_os="none", feature(slice_concat_ext))]
+
+#[cfg(any(target_os="none"))]
+#[macro_use]
 extern crate alloc;
 
-#[macro_use(vec, format)]
+#[cfg(any(target_os="none"))]
+#[macro_use]
 extern crate collections;
 
-// for tests
-#[cfg(test)]
-#[macro_use(println, assert_eq, print, panic)]
+#[cfg(any(feature="debug_std", test, not(target_os="none")))]
+#[macro_use]
 extern crate std;
 
 
-mod cli;
-mod commands;
+mod autocomplete;
+mod property;
 mod utils;
+mod prelude;
+mod cli;
+mod cli_command;
+mod cli_property;
+mod keys;
+mod keys_terminal;
+mod terminal;
+mod terminal_telnet;
 mod prompt_buffer;
 
 
-pub use cli::*;
+pub use autocomplete::*;
 pub use utils::*;
-pub use commands::*;
+pub use cli::*;
+pub use cli_command::*;
+pub use cli_property::*;
+pub use keys::*;
+pub use keys_terminal::*;
+pub use property::*;
+pub use terminal::*;
+pub use terminal_telnet::*;
 pub use prompt_buffer::*;
+
+#[cfg(feature = "termios_support")]
+pub mod terminal_termios;
 
 #[cfg(test)]
 mod tests;

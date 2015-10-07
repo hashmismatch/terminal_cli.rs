@@ -1,159 +1,266 @@
-use alloc::boxed::Box;
-
-use collections::Vec;
-use collections::String;
-use collections::string::ToString;
-use collections::string::FromUtf8Error;
-use core::array::FixedSizeArray;
-
+use prelude::v1::*;
+use autocomplete::*;
 use cli::*;
+use keys::*;
+use terminal::*;
 use utils::*;
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum PromptEvent {
+	Break
+}
 
 enum AutocompleteRequest {	
 	None,
-	HaveMultipleOptions { matches: AutocompleteResult }
+	HaveMultipleOptions { lines: Vec<AutocompleteLine> }
 }
 
 /// Holds the current line buffer for a terminal and its possible autocomplete state.
-pub struct CliPromptAutocompleteBuffer {
+pub struct PromptBuffer {
 	line_buffer: Vec<u8>,
-	prompt: String,
-	newline: String,
+	change_path_enabled: bool,
+	current_path: Vec<String>,
+	path_separator: char,
 	autocomplete: AutocompleteRequest,
-	max_buffer_length: usize
+	options: PromptBufferOptions
 }
 
-pub trait CliPromptTerminal {
-	fn print_bytes(&self, bytes: &[u8]);
-	fn print(&self, str: &str) {
-		self.print_bytes(str.bytes().collect::<Vec<u8>>().as_slice());
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum NewlineSequence {
+	Newline,
+	CarriageReturn
+}
+
+/// Options for the prompt buffer
+pub struct PromptBufferOptions {
+	/// Prompt sequence to be printed after every newline
+	pub prompt: String,
+	/// Newline sequence to be used while writing
+	pub newline: String,
+	/// Maximum size of the line buffer
+	pub max_line_length: usize,
+	/// Echo the typed characters?
+	pub echo: bool,
+	/// Input newline key sequence
+	pub newline_key_sequence: NewlineSequence
+
+}
+
+impl Default for PromptBufferOptions {
+	fn default() -> PromptBufferOptions {
+		PromptBufferOptions {
+			prompt: "# ".into(),
+			echo: true,
+			newline: "\r\n".into(),
+			max_line_length: 512,
+			newline_key_sequence: NewlineSequence::Newline
+		}
 	}
 }
 
-impl CliPromptAutocompleteBuffer {
-	pub fn new(prompt: String) -> CliPromptAutocompleteBuffer {
-		CliPromptAutocompleteBuffer {
+impl PromptBuffer {
+	/// Create a new prompt buffer
+	pub fn new(options: PromptBufferOptions) -> PromptBuffer {
+		PromptBuffer {
 			line_buffer: Vec::new(),
-			prompt: prompt, 
-			newline: "\r\n".to_string(),
+			change_path_enabled: false,
+			current_path: vec![],
+			path_separator: '/',
 			autocomplete: AutocompleteRequest::None,
-			max_buffer_length: 512
+			options: options
+		}
+	}
+	
+	/// Print the prompt
+	pub fn print_prompt<T: CharacterTerminalWriter>(&self, output: &mut T) {
+		if !self.options.prompt.len() == 0 { return; }
+
+		if self.change_path_enabled {
+			let sep = self.path_separator.to_string();
+
+			let path: String = {
+				if self.current_path.len() == 0 {
+					sep
+				} else {
+					format!("{}{}{}", &sep, self.current_path.join(&sep), &sep)
+				}
+			};
+			
+			let prompt = self.options.prompt.replace("\\W", &path);
+
+			output.print_str(&prompt);
+		} else {
+			output.print_str(&self.options.prompt);
 		}
 	}
 
-	pub fn print_prompt<T>(&self, output: &T) where T: CliPromptTerminal {
-		if !self.prompt.len() == 0 { return; }
-
-		output.print(self.prompt.as_str());
-	}
-
-	pub fn handle_received_byte<T>(&mut self, byte: u8, output: &T, cmds: &mut [Box<CliCommand + Send + 'static>], cli_terminal: &mut CliTerminal)
-		where T: CliPromptTerminal
+	/// Handle the incoming key press. Pass the lambda that will match the commands for
+	/// autocomplete or execution.
+	pub fn handle_key<T, F: FnOnce(&mut CliExecutor) -> ()>(&mut self, key: Key, terminal: &mut T, call_commands: F) -> Option<PromptEvent>
+		where T: CharacterTerminalWriter + FmtWrite
 	{
 		let mut handled_autocomplete = false;
 
-		match byte {
-			// tab \t
-			0x09 => {
-				match self.autocomplete {					
-					AutocompleteRequest::None => {
-						// try to resolve the options
-						let str = String::from_utf8(self.line_buffer.clone());
-						if !str.is_err() {
-							let autocomplete = cli_try_autocomplete(str.unwrap().as_str(), cmds);
+		let is_line_finished = {
+			match self.options.newline_key_sequence {
+				NewlineSequence::Newline => key == Key::Newline,
+				NewlineSequence::CarriageReturn => key == Key::CarriageReturn
+			}
+		};
 
-							match autocomplete {
-								AutocompleteResult::None => {},
-								AutocompleteResult::SingleMatch { line: ref line } => {
-									// immediately send the new stuff
-									let ref additional_part = line.additional_part;
-									output.print_bytes(additional_part.bytes().collect::<Vec<u8>>().as_slice());
+		if is_line_finished {
+			
+			terminal.print_line("");
 
-									// replace our line buffer with the stuff from autocomplete, to be consistent with future invokations
-									self.line_buffer.clear();
-									for c in line.full_new_line.bytes() {
-										self.line_buffer.push(c);
-									}
+			if let Ok(line) = str::from_utf8(self.line_buffer.as_slice()) {
+				
+				let result = {
+					let mut matcher = CliLineMatcher::new(&line, LineMatcherMode::Execute);
+					let mut executor = CliExecutor::new(matcher, terminal);
+					call_commands(&mut executor);
+					executor.close().finish()
+				};
 
-									// we're done with this one
-									self.autocomplete = AutocompleteRequest::None;
-								},
-								AutocompleteResult::MultipleMatches { lines: ref lines } => {
-									// this was the first time tab was pressed, and there are multiple options. store them,
-									// when the user presses tab again, print them out
-									// we could also bleep at this point...
+				match result {
+					LineBufferResult::NoMatchFound => {
+						// command not recognized
+						terminal.print_line("Command not recognized.");
+					},
+					_ => ()
+				}
 
-									self.autocomplete = AutocompleteRequest::HaveMultipleOptions {
-										matches: autocomplete.clone()
-									};
+			}
+
+			self.line_buffer.clear();
+			self.print_prompt(terminal);
+
+		} else {
+			match key {
+				Key::Tab => {
+
+					match self.autocomplete {
+						AutocompleteRequest::None => {
+							
+							let mut single_match_additional_chars = None;
+
+							if let Ok(line) = str::from_utf8(self.line_buffer.as_slice()) {
+
+								let result = {
+									let matcher = CliLineMatcher::new(&line, LineMatcherMode::AutocompleteOnly);
+									let mut executor = CliExecutor::new(matcher, terminal);
+									call_commands(&mut executor);
+									executor.close().finish()
+								};
+
+								match result {
+									LineBufferResult::Autocomplete { result } => {
+										match result {
+											AutocompleteResult::None => (),
+											AutocompleteResult::SingleMatch { line } => {
+												// immediately send the new stuff
+												terminal.print_str(line.get_additional_part());
+
+												// clear the line outside the borrowed content
+												single_match_additional_chars = Some(line.full_new_line);
+												
+											},
+											AutocompleteResult::MultipleMatches { lines } => {
+												// this was the first time tab was pressed, and there are multiple options. store them,
+												// when the user presses tab again, print them out
+												// we could also bleep at this point...
+
+												self.autocomplete = AutocompleteRequest::HaveMultipleOptions {
+													lines: lines
+												};
+											}
+										}
+									},
+									_ => ()
 								}
 							}
-						}
 
-						handled_autocomplete = true;
-					},
-					AutocompleteRequest::HaveMultipleOptions { matches: ref matches } => {
-						if let &AutocompleteResult::MultipleMatches { lines: ref lines } = matches {
+							if let Some(single_match_additional_chars) = single_match_additional_chars.take() {
+								// replace our line buffer with the stuff from autocomplete, to be consistent with future invokations
+								self.line_buffer.clear();
+								for c in single_match_additional_chars.bytes() {
+									self.line_buffer.push(c);
+								}
+							}
+
+							handled_autocomplete = true;
+						},					
+						AutocompleteRequest::HaveMultipleOptions { ref lines } => {
 							// print the available autocomplete options
-							let suggestions = lines.iter().map(|l| { l.full_new_line.as_str() }).collect::<Vec<&str>>();							
-							output.print(format_in_columns(suggestions.as_slice(), 80, 4, "\r\n").as_str());
 
-							self.print_prompt(output);
+							terminal.print_line("");
+							
+							let suggestions = lines.iter().map(|l| { l.get_display() }).collect::<Vec<&str>>();
+							format_in_columns(suggestions.as_slice(), 80, 4, &self.options.newline, terminal);
+
+							self.print_prompt(terminal);
 
 							// restore the current buffer
-							output.print_bytes(self.line_buffer.as_slice());
+							terminal.print(&self.line_buffer);
 
 							handled_autocomplete = false;
-						};
+						}
+					}
+
+					
+				},
+				Key::Newline | Key::CarriageReturn => {
+					// newline keys				
+				},
+				Key::Backspace => {
+					if let Some(..) = self.line_buffer.pop() {
+						if self.options.echo {
+							terminal.print(&[0x08, 0x20, 0x08]);
+						}
+					}
+				},
+				Key::Break => {
+					if self.line_buffer.len() == 0 {
+						return Some(PromptEvent::Break);
+					}
+
+					// clear the line
+					self.line_buffer.clear();
+					terminal.print_line("");
+					self.print_prompt(terminal);
+				},
+				Key::Eot => {
+					return Some(PromptEvent::Break);
+				},
+				Key::Arrow(_) => {
+					// todo: line history?
+				},
+				Key::Character(c) => {
+					if c != '\r' as u8 {
+						self.line_buffer.push(c);
+
+						if self.options.echo {
+							terminal.print(&[c]);
+						}
 					}
 				}
-			}
-			
-			// carriage return, \r
-			0x0d  => {
-				output.print(self.newline.as_str());
-
-				// new line
-				let str = String::from_utf8(self.line_buffer.clone());
-				if str.is_err() {
-					output.print("String parse error.");
-				} else {
-					cli_execute(str.unwrap().as_str(), cmds, cli_terminal);
-				}
-
-				self.line_buffer.clear();
-				self.print_prompt(output);
-			}
-
-			// backspace
-			0x7f => {
-				// reply to it only if our line buffer contains something
-				// otherwise it would overwrite the prompt
-
-				if let Some(..) = self.line_buffer.pop() {					
-					output.print_bytes(&[0x7f].as_slice());
-				}
-			}
-
-			// anything else
-			_ => {
-				self.line_buffer.push(byte);
-				if self.line_buffer.len() >= self.max_buffer_length {
-					// system message?
-					output.print(self.newline.as_str());
-					output.print("Line buffer overflow.");
-					output.print(self.newline.as_str());
-
-					self.line_buffer.clear();
-					self.print_prompt(output);
-				}
-				output.print_bytes(&[byte].as_slice());
 			}
 		}
 
 		if handled_autocomplete == false {
 			// reset autocomplete state
 			self.autocomplete = AutocompleteRequest::None;
-		}
+		}		
+
+		None
 	}
+
+	/*
+	fn buffer_as_str(&self) -> Option<&str> {
+		str::from_utf8(self.line_buffer.as_slice()).ok()
+	}
+
+	fn buffer_as_string(&self) -> Option<String> {
+		String::from_utf8(self.line_buffer.clone()).ok()
+	}
+	*/
 }
