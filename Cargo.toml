@@ -1,6 +1,6 @@
 [package]
 name = "terminal_cli"
-version = "0.1.2"
+version = "0.2.0"
 license = "MIT/Apache-2.0"
 readme = "README.md"
 authors = [ "Rudi Benkovic <rudi.benkovic@gmail.com>" ]
@@ -12,3 +12,17 @@ Low-level, no-std library for implementing terminal command line
 interfaces in embedded environments. With autocomplete support and
 a receiving buffer for a prompt interface.
 """
+
+
+[features]
+default = []
+termios_support = ["termios"]
+rotor_telnet_support = ["rotor", "rotor-stream", "bytes"]
+
+
+
+[dependencies]
+termios = { version = "0.2.2", optional = true }
+rotor = { version = "0.6.3", optional = true }
+rotor-stream = { version = "0.6.2", optional = true }
+bytes = { version = "0.3.0", optional = true }

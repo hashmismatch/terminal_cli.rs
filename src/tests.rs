@@ -1,62 +1,51 @@
+use prelude::v1::*;
 use super::*;
-use core::prelude::*;
-use alloc::boxed::*;
-use collections::string::*;
-//use super::commands::*;
-
-
-struct StdoutTerminal;
-impl CliTerminal for StdoutTerminal {
-	fn output_line(&mut self, line: &str) {
-		println!("{}", line);
-	}
-}
 
 #[test]
 pub fn test_suggest() {
-	let show = CliCommandKeyword {
-		keyword: "show".to_string(),
-		action: |line, cli| {
-		}
+	let cmd1 = CliCommand {
+		command: "status".into(),
+		help: Some("Some basics about the state of the system".into())
 	};
-	let cs = CliPropertyVar {
-		var_name: "display".to_string(),
-		var_value: "clock".to_string(),
-		val_hint: "clock, blank".to_string(),
-		var_output: |v| { v.to_string() },
-		var_input: |v| {
-			if v.len() > 0 { Some(v.to_string()) }
-			else { None }
-		}
+	let cmd2 = CliCommand {
+		command: "status net".into(),
+		help: None
 	};
-	let ct = CliPropertyVar {
-		var_name: "time".to_string(),
-		var_value: "11:15".to_string(),
-		val_hint: "HH:mm".to_string(),
-		var_output: |v| { v.to_string() },
-		var_input: |v| {
-			if v.len() > 0 { Some(v.to_string()) }
-			else { None }
-		}
-	};
-	let ctt = CliPropertyVar {
-		var_name: "time_date".to_string(),
-		var_value: "11:15 1.1.2015".to_string(),
-		val_hint: "HH:mm DD.MM.YYYY".to_string(),
-		var_output: |v| { v.to_string() },
-		var_input: |v| {
-			if v.len() > 0 { Some(v.to_string()) }
-			else { None }
-		}
-	};
-	let mut term = StdoutTerminal;
-	let mut commands = vec![
-		Box::new(show) as Box<CliCommand + Send>,
-		Box::new(cs) as Box<CliCommand + Send>,
-		Box::new(ct) as Box<CliCommand + Send>,
-		Box::new(ctt) as Box<CliCommand + Send>
-	];
-	cli_execute("set ", commands.as_mut_slice(), &mut term);
-	let autocomplete = cli_try_autocomplete("", commands.as_mut_slice());
-	println!("{:?}", autocomplete);
+
+
+	let mut get_matcher = |l, m| { CliLineMatcher::new(l, m) };
+
+	{
+		let mut matcher = get_matcher("", LineMatcherMode::Execute);
+		matcher.process(&cmd1);
+		assert_eq!(LineBufferResult::MoreInputRequired, matcher.finish());
+	}
+
+	{
+		let mut matcher = get_matcher("st", LineMatcherMode::Execute);
+		matcher.process(&cmd1);
+		assert_eq!(LineBufferResult::MoreInputRequired, matcher.finish());
+	}
+
+	{
+		let mut matcher = get_matcher("status", LineMatcherMode::Execute);
+		matcher.process(&cmd1);
+		assert_eq!(LineBufferResult::Match { args: "".into() }, matcher.finish());
+	}
+
+	{
+		let mut matcher = get_matcher("status more", LineMatcherMode::Execute);
+		matcher.process(&cmd1);
+		assert_eq!(LineBufferResult::Match { args: " more".into() }, matcher.finish());
+	}
+
+
+
+	
+	{
+		let mut matcher = get_matcher("st", LineMatcherMode::AutocompleteOnly);
+		matcher.process(&cmd1);
+		matcher.process(&cmd2);
+		assert_eq!(LineBufferResult::Autocomplete { result: AutocompleteResult::MultipleMatches { lines: vec![AutocompleteLine { full_new_line: "status".into(), additional_part: "atus".into() }, AutocompleteLine { full_new_line: "status net".into(), additional_part: "atus net".into() }] } }, matcher.finish());
+	}
 }

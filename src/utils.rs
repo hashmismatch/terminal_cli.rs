@@ -1,6 +1,4 @@
-use core::intrinsics;
-use core::iter::repeat;
-use collections::string::*;
+use prelude::v1::*;
 
 /// A naive implementation. Can be implemented with a trie, but it's overkill here.
 /// http://en.wikipedia.org/wiki/LCP_array
@@ -35,33 +33,33 @@ pub fn longest_common_prefix(strings: &[&str]) -> Option<String> {
 	None
 }
 
-/// Formats the strings in autocomplete-style column notation. Adds spaces in between.
-/// Preserves the ordering. Last line will contain the newline sequence.
+/// Formats the strings in autocomplete-style column notation. Fills the width of
+/// the entire line with a string plus the desired spacing characters. Preserves 
+/// the ordering in columns.
 ///
-/// # Example
+/// # Examples
 ///
 /// ```
-/// #![feature(convert)]
 /// # use terminal_cli::*;
 /// let s = vec!["A1", "A2", "A3", "B1", "B2", "C1", "C2"];
-/// let f = format_in_columns(s.as_slice(), 26, 10, "\r\n");
-/// println!("{}", f);
+/// let mut out = String::new();
+/// format_in_columns(s.as_slice(), 26, 10, "\r\n", &mut out).unwrap();
+/// println!("{}", out);
+/// # assert_eq!("A1          B1          C2\r\nA2          B2          \r\nA3          C1          \r\n", out);
 /// ```
-///
-/// # Example output
-///
 /// ```text
 /// A1          B1          C2
 /// A2          B2
 /// A3          C1
 /// ```
-pub fn format_in_columns(strings: &[&str], width: u16, min_spacing: u16, new_line: &str) -> String {
-	if strings.len() == 0 { return "".to_string() };
-	let max_len = strings.iter().max_by(|s| { s.len() }).unwrap().len() as u16;
+pub fn format_in_columns<W: Write>(strings: &[&str], width: u16, spacing: u16, new_line: &str, write: &mut W) -> Result<(), Error> {
+	if strings.len() == 0 { return Ok(()); }
+
+	let max_len = strings.iter().max_by_key(|s| { s.len() }).unwrap().len() as u16;
 
 	let columns = {
-		let c = floorf((width as f32 / (max_len + min_spacing) as f32)) as u16;
-		let plus_one_width = ((max_len + min_spacing) * c) + max_len;
+		let c = ((width as f32 / (max_len + spacing) as f32)).floor() as u16;
+		let plus_one_width = ((max_len + spacing) * c) + max_len;
 		if plus_one_width <= width {
 			c + 1
 		} else {
@@ -69,41 +67,32 @@ pub fn format_in_columns(strings: &[&str], width: u16, min_spacing: u16, new_lin
 		}
 	};
 
-	let rows = ceilf(strings.len() as f32 / columns as f32) as u16;
-	
-	let mut ret = String::new();
-	
-	for i in 0..rows {
-		let mut line = String::new();
+	let rows = (strings.len() as f32 / columns as f32).ceil() as u16;
 
+	for i in 0..rows {
 		for j in 0..columns {			
 			let pos = (j as usize * rows as usize) + i as usize;
 			if let Some(s) = strings.get(pos) {
-				line.push_str(s);
+				try!(write. write_str(&s));
 
 				if j < columns-1 {
-					let spaces = (max_len - s.len() as u16) + min_spacing;
-					line.push_str(repeat(" ").take(spaces as usize).collect::<String>().as_str());
+					let spaces = (max_len - s.len() as u16) + spacing;
+					for i in 0..spaces {
+						try!(write.write_str(" "));
+					}
 				}
-			};
+			}
 		}
-
-		ret.push_str(new_line);
-		ret.push_str(line.as_str());
+		write.write_str(new_line);
 	}
 
-	ret.push_str(new_line);
-
-	ret
+	Ok(())
 }
-
-fn floorf(f: f32) -> f32 { unsafe { intrinsics::floorf32(f) } }
-fn ceilf(f: f32) -> f32 { unsafe { intrinsics::ceilf32(f) } }
 
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use collections::string::*;
+	use prelude::v1::*;
 
 	#[test]
 	fn test_lcp() {
@@ -141,8 +130,9 @@ mod tests {
 	#[test]
 	fn test_column_format() {
 		let s = vec!["A1", "A2", "A3", "B1", "B2", "C1", "C2"];
-		let f = format_in_columns(s.as_slice(), 26, 10, "\r\n");
-		println!("{}", f);
+		let mut out = String::new();
+		format_in_columns(&s, 26, 10, "\r\n", &mut out).unwrap();
+		assert_eq!("A1          B1          C2\r\nA2          B2          \r\nA3          C1          \r\n", out);
 	}
 
 }

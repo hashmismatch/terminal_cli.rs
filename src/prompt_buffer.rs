@@ -1,159 +1,169 @@
-use alloc::boxed::Box;
-
-use collections::Vec;
-use collections::String;
-use collections::string::ToString;
-use collections::string::FromUtf8Error;
-use core::array::FixedSizeArray;
-
+use prelude::v1::*;
 use cli::*;
+use keys::*;
+use terminal::*;
 use utils::*;
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum PromptEvent {
+	Break
+}
 
 enum AutocompleteRequest {	
 	None,
-	HaveMultipleOptions { matches: AutocompleteResult }
+	HaveMultipleOptions { lines: Vec<AutocompleteLine> }
 }
 
 /// Holds the current line buffer for a terminal and its possible autocomplete state.
-pub struct CliPromptAutocompleteBuffer {
+pub struct PromptBuffer {
 	line_buffer: Vec<u8>,
+	echo: bool,
 	prompt: String,
 	newline: String,
 	autocomplete: AutocompleteRequest,
 	max_buffer_length: usize
 }
 
-pub trait CliPromptTerminal {
-	fn print_bytes(&self, bytes: &[u8]);
-	fn print(&self, str: &str) {
-		self.print_bytes(str.bytes().collect::<Vec<u8>>().as_slice());
-	}
-}
-
-impl CliPromptAutocompleteBuffer {
-	pub fn new(prompt: String) -> CliPromptAutocompleteBuffer {
-		CliPromptAutocompleteBuffer {
+impl PromptBuffer {
+	pub fn new(echo: bool) -> PromptBuffer {
+		PromptBuffer {
 			line_buffer: Vec::new(),
-			prompt: prompt, 
+			prompt: "# ".into(),
+			echo: echo,
 			newline: "\r\n".to_string(),
 			autocomplete: AutocompleteRequest::None,
 			max_buffer_length: 512
 		}
 	}
 
-	pub fn print_prompt<T>(&self, output: &T) where T: CliPromptTerminal {
+	pub fn print_prompt<T: CharacterTerminalWriter>(&self, output: &mut T) {
 		if !self.prompt.len() == 0 { return; }
 
-		output.print(self.prompt.as_str());
+		output.print_str(&self.prompt);
 	}
 
-	pub fn handle_received_byte<T>(&mut self, byte: u8, output: &T, cmds: &mut [Box<CliCommand + Send + 'static>], cli_terminal: &mut CliTerminal)
-		where T: CliPromptTerminal
+	pub fn handle_key<T, F: FnOnce(CliLineMatcher, &mut T) -> LineBufferResult>(&mut self, key: Key, terminal: &mut T, call_commands: F) -> Option<PromptEvent>
+		where T: CharacterTerminalWriter + LineTerminalWriter + Write
 	{
 		let mut handled_autocomplete = false;
 
-		match byte {
-			// tab \t
-			0x09 => {
+		match key {
+			Key::Tab => {
+
 				match self.autocomplete {					
 					AutocompleteRequest::None => {
-						// try to resolve the options
-						let str = String::from_utf8(self.line_buffer.clone());
-						if !str.is_err() {
-							let autocomplete = cli_try_autocomplete(str.unwrap().as_str(), cmds);
+						if let Some(line) = self.buffer_as_str() {
+							let mut matcher = CliLineMatcher::new(&line, LineMatcherMode::AutocompleteOnly);
+							let result = call_commands(matcher, terminal);
 
-							match autocomplete {
-								AutocompleteResult::None => {},
-								AutocompleteResult::SingleMatch { line: ref line } => {
-									// immediately send the new stuff
-									let ref additional_part = line.additional_part;
-									output.print_bytes(additional_part.bytes().collect::<Vec<u8>>().as_slice());
+							match result {
+								LineBufferResult::Autocomplete { ref result } => {
+									match *result {
+										AutocompleteResult::None => (),
+										AutocompleteResult::SingleMatch { ref line } => {
+											// immediately send the new stuff
+											let ref additional_part = line.additional_part;
+											terminal.print_str(additional_part);
 
-									// replace our line buffer with the stuff from autocomplete, to be consistent with future invokations
-									self.line_buffer.clear();
-									for c in line.full_new_line.bytes() {
-										self.line_buffer.push(c);
+											// replace our line buffer with the stuff from autocomplete, to be consistent with future invokations
+											self.line_buffer.clear();
+											for c in line.full_new_line.bytes() {
+												self.line_buffer.push(c);
+											}
+										},
+										AutocompleteResult::MultipleMatches { ref lines } => {
+											// this was the first time tab was pressed, and there are multiple options. store them,
+											// when the user presses tab again, print them out
+											// we could also bleep at this point...
+
+											self.autocomplete = AutocompleteRequest::HaveMultipleOptions {
+												lines: lines.clone()
+											};
+										}
 									}
-
-									// we're done with this one
-									self.autocomplete = AutocompleteRequest::None;
 								},
-								AutocompleteResult::MultipleMatches { lines: ref lines } => {
-									// this was the first time tab was pressed, and there are multiple options. store them,
-									// when the user presses tab again, print them out
-									// we could also bleep at this point...
-
-									self.autocomplete = AutocompleteRequest::HaveMultipleOptions {
-										matches: autocomplete.clone()
-									};
-								}
+								_ => ()
 							}
 						}
 
 						handled_autocomplete = true;
-					},
-					AutocompleteRequest::HaveMultipleOptions { matches: ref matches } => {
-						if let &AutocompleteResult::MultipleMatches { lines: ref lines } = matches {
-							// print the available autocomplete options
-							let suggestions = lines.iter().map(|l| { l.full_new_line.as_str() }).collect::<Vec<&str>>();							
-							output.print(format_in_columns(suggestions.as_slice(), 80, 4, "\r\n").as_str());
+					},					
+					AutocompleteRequest::HaveMultipleOptions { ref lines } => {
+						// print the available autocomplete options
+						
+						let suggestions = lines.iter().map(|l| { l.full_new_line.as_str() }).collect::<Vec<&str>>();
+						format_in_columns(suggestions.as_slice(), 80, 4, &self.newline, terminal);
 
-							self.print_prompt(output);
+						self.print_prompt(terminal);
 
-							// restore the current buffer
-							output.print_bytes(self.line_buffer.as_slice());
+						// restore the current buffer
+						terminal.print(&self.line_buffer);
 
-							handled_autocomplete = false;
-						};
+						handled_autocomplete = false;
 					}
 				}
-			}
-			
-			// carriage return, \r
-			0x0d  => {
-				output.print(self.newline.as_str());
 
-				// new line
-				let str = String::from_utf8(self.line_buffer.clone());
-				if str.is_err() {
-					output.print("String parse error.");
-				} else {
-					cli_execute(str.unwrap().as_str(), cmds, cli_terminal);
+				
+			},
+			Key::Newline => {
+				
+				terminal.print_str_line("");
+
+				if let Some(line) = self.buffer_as_str() {
+					let mut matcher = CliLineMatcher::new(&line, LineMatcherMode::Execute);
+					let result = call_commands(matcher, terminal);
 				}
 
 				self.line_buffer.clear();
-				self.print_prompt(output);
-			}
-
-			// backspace
-			0x7f => {
-				// reply to it only if our line buffer contains something
-				// otherwise it would overwrite the prompt
-
-				if let Some(..) = self.line_buffer.pop() {					
-					output.print_bytes(&[0x7f].as_slice());
+				self.print_prompt(terminal);
+			},
+			Key::Backspace => {
+				if let Some(..) = self.line_buffer.pop() {
+					if self.echo {
+						terminal.print(&[0x08, 0x20, 0x08]);
+					}
 				}
-			}
-
-			// anything else
-			_ => {
-				self.line_buffer.push(byte);
-				if self.line_buffer.len() >= self.max_buffer_length {
-					// system message?
-					output.print(self.newline.as_str());
-					output.print("Line buffer overflow.");
-					output.print(self.newline.as_str());
-
-					self.line_buffer.clear();
-					self.print_prompt(output);
+			},
+			Key::Break => {
+				if self.line_buffer.len() == 0 {
+					return Some(PromptEvent::Break);
 				}
-				output.print_bytes(&[byte].as_slice());
+
+				// clear the line
+				self.line_buffer.clear();
+				terminal.print_str_line("");
+				self.print_prompt(terminal);
+			},
+			Key::Eot => {
+				return Some(PromptEvent::Break);
+			},
+			Key::Arrow(_) => {
+				// todo: line history?
+			},
+			Key::Character(c) => {
+				if c != '\r' as u8 {
+					self.line_buffer.push(c);
+
+					if self.echo {
+						terminal.print(&[c]);
+					}
+				}
 			}
 		}
 
 		if handled_autocomplete == false {
 			// reset autocomplete state
 			self.autocomplete = AutocompleteRequest::None;
+		}		
+
+		None
+	}
+
+	fn buffer_as_str(&self) -> Option<String> {
+		if let Ok(s) = String::from_utf8(self.line_buffer.clone()) {
+			Some(s)
+		} else {
+			None
 		}
 	}
 }
