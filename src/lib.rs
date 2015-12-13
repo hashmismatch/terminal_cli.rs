@@ -88,6 +88,7 @@
 #![feature(fixed_size_array)]
 #![feature(iter_cmp)]
 #![feature(core_intrinsics)]
+#![feature(fn_traits)]
 
 extern crate alloc;
 
