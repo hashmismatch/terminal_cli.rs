@@ -57,7 +57,7 @@ pub fn longest_common_prefix(strings: &[&str]) -> Option<String> {
 /// ```
 pub fn format_in_columns(strings: &[&str], width: u16, min_spacing: u16, new_line: &str) -> String {
 	if strings.len() == 0 { return "".to_string() };
-	let max_len = strings.iter().max_by(|s| { s.len() }).unwrap().len() as u16;
+	let max_len = strings.iter().max_by_key(|s| { s.len() }).unwrap().len() as u16;
 
 	let columns = {
 		let c = floorf((width as f32 / (max_len + min_spacing) as f32)) as u16;
