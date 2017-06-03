@@ -9,14 +9,17 @@ pub struct CommandContext<'b> {
 }
 
 impl<'b> CommandContext<'b> {
+	#[inline]
 	pub fn get_args(&self) -> &str {
 		&self.args
 	}
 
+	#[inline]
 	pub fn get_terminal(&mut self) -> &mut CharacterTerminalWriter {
 		self.terminal
 	}
 
+	#[inline]
 	pub fn get_current_path(&self) -> &str {
 		&self.current_path
 	}

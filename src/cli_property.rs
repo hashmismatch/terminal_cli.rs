@@ -54,18 +54,22 @@ pub struct PropertyContextCommon<'b> {
 }
 
 impl<'b> PropertyContextCommon<'b> {
+	#[inline]
 	pub fn get_args(&self) -> &str {
 		&self.args
 	}
 
+	#[inline]
 	pub fn get_terminal(&mut self) -> &mut CharacterTerminalWriter {
 		self.terminal
 	}
 
+	#[inline]
 	pub fn get_current_path(&self) -> &str {
 		&self.current_path
 	}
 
+	#[inline]
 	pub fn get_property_id(&self) -> &str {
 		&self.id
 	}
