@@ -123,8 +123,10 @@ impl PromptBuffer {
 
 				match result {
 					LineBufferResult::NoMatchFound => {
-						// command not recognized
-						terminal.print_line("Command not recognized.");
+						if line.trim().len() > 0 {
+							// command not recognized
+							terminal.print_line("Command not recognized.");
+						}
 					},
 					_ => ()
 				}
