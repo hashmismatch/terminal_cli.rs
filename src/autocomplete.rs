@@ -145,8 +145,9 @@ impl<'a> CliLineMatcher<'a> {
 		   self.line.len() >= c &&
 		   self.line.starts_with(&*cmd) &&
 		   (cmd_ends_with_sep || at_sep == None || at_sep == Some(' '))
-		{
-			let args = self.line.chars().skip(cmd.len() + 1).collect();
+		{			
+			let args: String = self.line.chars().skip(cmd.len()).collect();
+			let args = args.trim_left().to_string();
 			self.state = LineBufferResult::Match { args: args };
 			return LineMatcherProgress::MatchFound;
 		} else if self.mode == LineMatcherMode::AutocompleteOnly && cmd.starts_with(self.line) {
