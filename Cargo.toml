@@ -20,3 +20,4 @@ termios_support = ["termios"]
 
 [dependencies]
 termios = { version = "0.2.2", optional = true }
+termion = { git = "https://github.com/mcgoo/termion", rev = "583070b" }

@@ -28,7 +28,8 @@ pub struct PromptBuffer {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum NewlineSequence {
 	Newline,
-	CarriageReturn
+	CarriageReturn,
+	NewlineOrCarriageReturn
 }
 
 /// Options for the prompt buffer
@@ -53,7 +54,7 @@ impl Default for PromptBufferOptions {
 			echo: true,
 			newline: "\r\n".into(),
 			max_line_length: 512,
-			newline_key_sequence: NewlineSequence::Newline
+			newline_key_sequence: NewlineSequence::NewlineOrCarriageReturn
 		}
 	}
 }
@@ -104,7 +105,10 @@ impl PromptBuffer {
 		let is_line_finished = {
 			match self.options.newline_key_sequence {
 				NewlineSequence::Newline => key == Key::Newline,
-				NewlineSequence::CarriageReturn => key == Key::CarriageReturn
+				NewlineSequence::CarriageReturn => key == Key::CarriageReturn,
+				NewlineSequence::NewlineOrCarriageReturn => {
+					key == Key::Newline || key == Key::CarriageReturn
+				}
 			}
 		};
 

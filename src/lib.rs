@@ -90,5 +90,7 @@ pub use prompt_buffer::*;
 #[cfg(feature = "termios_support")]
 pub mod terminal_termios;
 
+pub mod terminal_termion;
+
 #[cfg(test)]
 mod tests;
