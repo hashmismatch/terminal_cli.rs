@@ -43,7 +43,7 @@ impl<'a> CliExecutor<'a> {
 	}
 
 	/// Announces a command to be executed. Returns an execution context in case the command is invoked.
-	pub fn run_command<'b>(&'b mut self, cmd: &str) -> Option<CommandContext<'b>> {
+	pub fn command<'b>(&'b mut self, cmd: &str) -> Option<CommandContext<'b>> {
 
 		if self.matcher.match_cmd_str(cmd, None) == LineMatcherProgress::MatchFound {
 			let args = if let &LineBufferResult::Match { ref args, .. } = self.matcher.get_state() {
@@ -68,7 +68,7 @@ impl<'a> CliExecutor<'a> {
 	
 	/// Announces a property that can be manipulated. Returns an execution context in case the property
 	/// is to be either retrieved or updated.
-	pub fn run_property<'b, V, P, Id: Into<Cow<'b, str>>>(&'b mut self, property_id: Id, input_parser: P) -> Option<PropertyContext<'b, V>> where P: ValueInput<V>, V: Display {
+	pub fn property<'b, V, P, Id: Into<Cow<'b, str>>>(&'b mut self, property_id: Id, input_parser: P) -> Option<PropertyContext<'b, V>> where P: ValueInput<V>, V: Display {
 		let property_id: Cow<str> = property_id.into();
 
 		if self.matcher.match_cmd_str(&format!("{}/get", property_id), None) == LineMatcherProgress::MatchFound {
@@ -142,16 +142,21 @@ impl<'a, 'p> PrefixedExecutor<'a, 'p> {
 		format!("{}{}", self.prefix, cmd)
 	}
 
-	pub fn run_command<'b>(&'b mut self, cmd: &str) -> Option<CommandContext<'b>> {
+	pub fn with_prefix<'b, I: Into<Cow<'b, str>>>(&'b mut self, prefix: I) -> Option<PrefixedExecutor<'a, 'b>> {
+		let prefix = self.add_prefix(&prefix.into());
+		self.executor.with_prefix(prefix)
+	}
+
+	pub fn command<'b>(&'b mut self, cmd: &str) -> Option<CommandContext<'b>> {
 		let cmd = self.add_prefix(cmd);
 
-		self.executor.run_command(&cmd)
+		self.executor.command(&cmd)
 	}
 	
-	pub fn run_property<'b, V, P, Id: Into<Cow<'b, str>>>(&'b mut self, property_id: Id, input_parser: P) -> Option<PropertyContext<'b, V>> where P: ValueInput<V>, V: Display {
+	pub fn property<'b, V, P, Id: Into<Cow<'b, str>>>(&'b mut self, property_id: Id, input_parser: P) -> Option<PropertyContext<'b, V>> where P: ValueInput<V>, V: Display {
 		let property_id: Cow<str> = property_id.into();
 		let property_id = self.add_prefix(&property_id);
 
-		self.executor.run_property(property_id, input_parser)
+		self.executor.property(property_id, input_parser)
 	}
 }

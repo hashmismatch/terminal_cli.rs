@@ -26,11 +26,11 @@
 //! 
 //! for key in &input_keys {
 //!		let p = prompt.handle_key(*key, &mut terminal, |mut m| {
-//!         if let Some(mut ctx) = m.run_command("help") {
+//!         if let Some(mut ctx) = m.command("help") {
 //!             ctx.get_terminal().print_line("Help!");
 //!         }
 //!
-//!         if let Some(mut ctx) = m.run_property("num1", validate_property_min_max(1, 100)) {
+//!         if let Some(mut ctx) = m.property("num1", validate_property_min_max(1, 100)) {
 //!             ctx.apply(&mut num1);
 //!         }
 //!		});

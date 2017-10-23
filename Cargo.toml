@@ -1,4 +1,5 @@
 [workspace]
 members = [
-    "cli_core"
+    "cli_core",
+    "terminal_termion"
 ]
