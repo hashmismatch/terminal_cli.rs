@@ -24,6 +24,22 @@ impl<'a> CliExecutor<'a> {
 		self.matcher
 	}
 
+	/// Creates a new prefixed execution context, but only if the current line matches. Reduces the
+	/// processing overhead for large tree command environments.
+	pub fn with_prefix<'b, I: Into<Cow<'b, str>>>(&'b mut self, prefix: I) -> Option<PrefixedExecutor<'a, 'b>> {
+		let prefix = prefix.into();
+		if self.matcher.starts_with(&prefix) {
+			let p = PrefixedExecutor {
+				prefix: prefix,
+				executor: self
+			};
+
+			return Some(p);
+		}
+		
+		None
+	}
+
 	/// Announces a command to be executed. Returns an execution context in case the command is invoked.
 	pub fn run_command<'b>(&'b mut self, cmd: &str) -> Option<CommandContext<'b>> {
 
@@ -106,3 +122,34 @@ impl<'a> CliExecutor<'a> {
 	}
 }
 
+impl<'a> Deref for CliExecutor<'a> {
+	type Target = &'a mut CharacterTerminalWriter;
+
+    fn deref<'b>(&'b self) -> &'b &'a mut CharacterTerminalWriter {
+        &self.terminal
+    }
+}
+
+pub struct PrefixedExecutor<'a: 'p, 'p> {
+	prefix: Cow<'p, str>,
+	executor: &'p mut CliExecutor<'a>
+}
+
+impl<'a, 'p> PrefixedExecutor<'a, 'p> {
+	fn add_prefix<'c>(&self, cmd: &'c str) -> String {
+		format!("{}{}", self.prefix, cmd)
+	}
+
+	pub fn run_command<'b>(&'b mut self, cmd: &str) -> Option<CommandContext<'b>> {
+		let cmd = self.add_prefix(cmd);
+
+		self.executor.run_command(&cmd)
+	}
+	
+	pub fn run_property<'b, V, P, Id: Into<Cow<'b, str>>>(&'b mut self, property_id: Id, input_parser: P) -> Option<PropertyContext<'b, V>> where P: ValueInput<V>, V: Display {
+		let property_id: Cow<str> = property_id.into();
+		let property_id = self.add_prefix(&property_id);
+
+		self.executor.run_property(property_id, input_parser)
+	}
+}

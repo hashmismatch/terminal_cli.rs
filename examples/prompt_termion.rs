@@ -18,6 +18,13 @@ fn main() {
 			Ok(key) => {
 				
 				match prompt.handle_key(key, &mut term, |mut m| {
+				
+					if let Some(mut m) = m.with_prefix("p3/") {						
+						if let Some(mut ctx) = m.run_command("hello") {
+							ctx.get_terminal().print_line("Hello world - P3");
+						}
+					}
+
 					if let Some(mut ctx) = m.run_property("counter", validate_property_min_max(1, 100)) {
 						ctx.apply(&mut counter);
 					}
@@ -36,6 +43,8 @@ fn main() {
 					if let Some(mut ctx) = m.run_command("p2/hello") {
 						ctx.get_terminal().print_line("Hello world - P2");
 					}
+
+					
 				})
 
 				{

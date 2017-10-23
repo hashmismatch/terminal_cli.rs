@@ -105,6 +105,10 @@ impl<'a> CliLineMatcher<'a> {
         &self.state
     }
 
+	pub fn starts_with(&self, cmd: &str) -> bool {
+		self.line_trimmed.starts_with(cmd)
+	}
+
 	/// Match the command, mutates the internal state of the matching
 	pub fn match_cmd<'b>(&mut self, cmd: &'b CliCommand<'b>) -> LineMatcherProgress {
 		let prefixed = if let Some(ref prefix) = self.line_prefix {

@@ -35,9 +35,9 @@ pub enum NewlineSequence {
 /// Options for the prompt buffer
 pub struct PromptBufferOptions {
 	/// Prompt sequence to be printed after every newline
-	pub prompt: String,
+	pub prompt: Cow<'static, str>,
 	/// Newline sequence to be used while writing
-	pub newline: String,
+	pub newline: Cow<'static, str>,
 	/// Maximum size of the line buffer
 	pub max_line_length: usize,
 	/// Echo the typed characters?
