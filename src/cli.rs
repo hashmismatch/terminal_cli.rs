@@ -35,6 +35,8 @@ impl<'a> CliExecutor<'a> {
 			};
 
 			return Some(p);
+		} else {
+			self.matcher.add_unmatched_prefix(&prefix);
 		}
 		
 		None

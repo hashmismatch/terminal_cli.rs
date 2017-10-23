@@ -23,6 +23,10 @@ fn main() {
 						if let Some(mut ctx) = m.run_command("hello") {
 							ctx.get_terminal().print_line("Hello world - P3");
 						}
+
+						if let Some(mut ctx) = m.run_command("ping") {
+							ctx.get_terminal().print_line("Pong");
+						}
 					}
 
 					if let Some(mut ctx) = m.run_property("counter", validate_property_min_max(1, 100)) {

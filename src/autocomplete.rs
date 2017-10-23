@@ -96,6 +96,9 @@ impl<'a> CliLineMatcher<'a> {
 		}
 	}
 
+	pub fn get_mode(&self) -> LineMatcherMode {
+		self.mode
+	}
 
 	pub fn set_line_prefix(&mut self, prefix: String) {
 		self.line_prefix = Some(prefix);
@@ -108,6 +111,12 @@ impl<'a> CliLineMatcher<'a> {
 	pub fn starts_with(&self, cmd: &str) -> bool {
 		self.line_trimmed.starts_with(cmd)
 	}
+
+	pub fn add_unmatched_prefix(&mut self, prefix: &str) {
+		if self.mode == LineMatcherMode::AutocompleteOnly {
+			self.match_cmd_str(prefix, None);
+		}
+	} 
 
 	/// Match the command, mutates the internal state of the matching
 	pub fn match_cmd<'b>(&mut self, cmd: &'b CliCommand<'b>) -> LineMatcherProgress {
