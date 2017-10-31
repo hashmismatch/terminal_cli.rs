@@ -6,3 +6,6 @@ authors = ["Rudi Benkovic <rudi.benkovic@gmail.com>"]
 [dependencies]
 terminal_cli = { path = "../cli_core/" }
 termion = { git = "https://github.com/mcgoo/termion", rev = "583070b" }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2.8"

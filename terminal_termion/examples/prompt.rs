@@ -54,6 +54,13 @@ fn main() {
 						ctx.get_terminal().print_line("Hello world - P2");
 					}
 
+					if let Some(mut ctx) = m.command("lines") {
+						ctx.get_terminal().print_line("Line 1");
+						ctx.get_terminal().print_line("Line 2");
+						println!("Line 3");
+						println!("Line 4");
+					}
+
 					
 				})
 

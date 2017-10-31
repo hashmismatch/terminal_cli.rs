@@ -1,5 +1,7 @@
 extern crate terminal_cli;
 extern crate termion;
+#[cfg(unix)]
+extern crate libc;
 
 use terminal_cli::*;
 
@@ -13,6 +15,50 @@ use std::io::{stdout, stdin, Bytes, Write, Stdout};
 use std::fmt::Write as FmtWrite;
 use std::fmt::Error as FmtError;
 
+
+#[cfg(unix)]
+fn init_cmode() {
+	use libc::c_int;
+	use std::mem;
+
+	use libc::termios as Termios;
+
+	extern "C" {
+		fn tcgetattr(fd: c_int, termptr: *mut Termios) -> c_int;
+		fn tcsetattr(fd: c_int, opt: c_int, termptr: *mut Termios) -> c_int;
+		fn cfmakeraw(termptr: *mut Termios);
+	}
+
+	fn get_terminal_attr() -> (Termios, c_int) {
+		unsafe {
+			let mut ios = mem::zeroed();
+			let attr = tcgetattr(0, &mut ios);
+			(ios, attr)
+		}
+	}
+
+	fn set_terminal_attr(ios: *mut Termios) -> c_int {
+		unsafe { tcsetattr(0, 0, ios) }
+	}
+
+	let (mut ios, exit) = get_terminal_attr();
+	if exit != 0 {
+		return;
+	}
+
+	ios.c_oflag |= libc::ONLCR | libc::OPOST;
+
+    if set_terminal_attr(&mut ios as *mut _) != 0 {
+    	return;
+	}
+}
+
+#[cfg(not(unix))]
+fn init_cmode() {
+
+}
+
+
 pub struct TerminalTermion {
 	decoder: TerminalKeyDecoder,
     stdout: self::termion::raw::RawTerminal<Stdout>
@@ -21,15 +67,13 @@ pub struct TerminalTermion {
 impl TerminalTermion {
 	pub fn new() -> Self {
         self::termion::init();
-    
+
         let stdin = stdin();
         let mut stdout = stdout().into_raw_mode().unwrap();
 
-        write!(stdout,
-            "{}{}{}",
-            termion::clear::All,
-            termion::cursor::Goto(1, 1),
-            termion::cursor::Hide).unwrap();
+		init_cmode();
+		
+        write!(stdout, "{}", termion::cursor::Show).unwrap();		
         stdout.flush().unwrap();
 
         TerminalTermion {         
