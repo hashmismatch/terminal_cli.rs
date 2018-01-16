@@ -66,8 +66,6 @@ pub struct TerminalTermion {
 
 impl TerminalTermion {
 	pub fn new() -> Self {
-        self::termion::init();
-
         let stdin = stdin();
         let mut stdout = stdout().into_raw_mode().unwrap();
 

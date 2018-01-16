@@ -7,6 +7,7 @@ use utils::*;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PromptEvent {
+	Ok,
 	Break
 }
 
@@ -95,9 +96,17 @@ impl PromptBuffer {
 		}
 	}
 
+	/// Handle a single key from a terminal. Blocks until the terminal implementation returns a key.
+	pub fn handle_terminal_key<T, F: FnOnce(&mut CliExecutor) -> ()>(&mut self, terminal: &mut T, call_commands: F) -> Result<PromptEvent, TerminalError>
+		where T: CharacterTerminalWriter + CharacterTerminalReader + FmtWrite
+	{
+		let key = terminal.read()?;
+		Ok(self.handle_key(key, terminal, call_commands))
+	}
+
 	/// Handle the incoming key press. Pass the lambda that will match the commands for
 	/// autocomplete or execution.
-	pub fn handle_key<T, F: FnOnce(&mut CliExecutor) -> ()>(&mut self, key: Key, terminal: &mut T, call_commands: F) -> Option<PromptEvent>
+	pub fn handle_key<T, F: FnOnce(&mut CliExecutor) -> ()>(&mut self, key: Key, terminal: &mut T, call_commands: F) -> PromptEvent
 		where T: CharacterTerminalWriter + FmtWrite
 	{
 		let mut handled_autocomplete = false;
@@ -226,7 +235,7 @@ impl PromptBuffer {
 				},
 				Key::Break => {
 					if self.line_buffer.len() == 0 {
-						return Some(PromptEvent::Break);
+						return PromptEvent::Break;
 					}
 
 					// clear the line
@@ -235,7 +244,7 @@ impl PromptBuffer {
 					self.print_prompt(terminal);
 				},
 				Key::Eot => {
-					return Some(PromptEvent::Break);
+					return PromptEvent::Break;
 				},
 				Key::Arrow(_) => {
 					// todo: line history?
@@ -257,7 +266,7 @@ impl PromptBuffer {
 			self.autocomplete = AutocompleteRequest::None;
 		}		
 
-		None
+		PromptEvent::Ok
 	}
 
 	/*

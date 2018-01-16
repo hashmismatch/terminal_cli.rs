@@ -1,7 +1,8 @@
 # terminal_cli.rs
 
-Low-level, no-std library for implementing terminal command line interfaces in embedded environments. With autocomplete support.
+A standalone library with no-std support for command line 
+terminal interfaces. With autocomplete support, helpers for commands and properties
+and a prompt implementation.
 
 [![Build Status](https://travis-ci.org/hashmismatch/terminal_cli.rs.svg?branch=master)](https://travis-ci.org/hashmismatch/terminal_cli.rs)
 
-[Documentation](http://hashmismatch.github.io/terminal_cli.rs/)
