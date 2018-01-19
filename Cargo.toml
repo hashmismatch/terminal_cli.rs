@@ -3,3 +3,8 @@ members = [
     "./cli_core/",
     "./cli_termion/"
 ]
+
+
+[patch.crates-io]
+terminal_cli = { path="./cli_core" }
+terminal_cli_termion = { path="./cli_termion" }
