@@ -2,7 +2,7 @@
 name = "terminal_cli"
 version = "0.2.0"
 license = "MIT/Apache-2.0"
-readme = "README.md"
+readme = "../README.md"
 authors = [ "Rudi Benkovic <rudi.benkovic@gmail.com>" ]
 repository = "https://github.com/hashmismatch/terminal_cli.rs"
 homepage = "https://github.com/hashmismatch/terminal_cli.rs"

@@ -1,3 +1,8 @@
+//! # Termion implementation for the Terminal CLI crate
+//! 
+//! System console terminal for prompts
+//! 
+
 extern crate terminal_cli;
 extern crate termion;
 #[cfg(unix)]
