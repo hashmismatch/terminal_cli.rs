@@ -1,5 +1,3 @@
-# terminal_cli
-
 ## Terminal CLI
 
 Need to build an interactive command prompt, with commands, properties and with full autocomplete? This is for you.
