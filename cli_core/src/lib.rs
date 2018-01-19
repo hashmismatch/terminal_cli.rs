@@ -34,7 +34,7 @@
 //!             ctx.apply(&mut num1);
 //!         }
 //!		});
-//!		if let Some(PromptEvent::Break) = p {
+//!		if let PromptEvent::Break = p {
 //!			break;
 //! 	}
 //! }
@@ -69,6 +69,8 @@ mod keys_terminal;
 mod terminal;
 mod prompt_buffer;
 
+
+pub mod i18n;
 
 pub use autocomplete::*;
 pub use utils::*;

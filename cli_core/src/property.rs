@@ -8,26 +8,6 @@ pub enum PropertyValidationError<T> {
 	ValueTooBig { max: T, val: T }
 }
 
-pub struct PropertyError {
-	validation_error: Box<Display>
-}
-
-impl<T: Display> Display for PropertyValidationError<T> {
-	fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-		match self {
-			&PropertyValidationError::InvalidInput => {
-				write!(f, "Invalid input")
-			},
-			&PropertyValidationError::ValueTooSmall { ref min, ref val } => {
-				write!(f, "Value {} is too small, the minimum value is {}.", val, min)
-			},
-			&PropertyValidationError::ValueTooBig { ref max, ref val } => {
-				write!(f, "Value {} is too large, the maximum value is {}.", val, max)
-			}
-		}
-	}
-}
-
 pub trait ValueInput<T> {
 	fn input(&self, s: &str) -> Result<T, PropertyValidationError<T>>;
 }

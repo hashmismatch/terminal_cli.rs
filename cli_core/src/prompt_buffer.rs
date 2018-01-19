@@ -5,6 +5,8 @@ use keys::*;
 use terminal::*;
 use utils::*;
 
+use i18n::*;
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PromptEvent {
 	Ok,
@@ -23,7 +25,8 @@ pub struct PromptBuffer {
 	current_path: Vec<String>,
 	path_separator: char,
 	autocomplete: AutocompleteRequest,
-	options: PromptBufferOptions
+	options: PromptBufferOptions,
+	strings: Box<Strings>
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -69,7 +72,8 @@ impl PromptBuffer {
 			current_path: vec![],
 			path_separator: '/',
 			autocomplete: AutocompleteRequest::None,
-			options: options
+			options: options,
+			strings: Box::new(English)
 		}
 	}
 	
@@ -129,7 +133,7 @@ impl PromptBuffer {
 				
 				let result = {
 					let mut matcher = CliLineMatcher::new(&line, LineMatcherMode::Execute);
-					let mut executor = CliExecutor::new(matcher, terminal);
+					let mut executor = CliExecutor::new(matcher, &*self.strings, terminal);
 					call_commands(&mut executor);
 					executor.close().finish()
 				};
@@ -138,7 +142,8 @@ impl PromptBuffer {
 					LineBufferResult::NoMatchFound => {
 						if line.trim().len() > 0 {
 							// command not recognized
-							terminal.print_line("Command not recognized.");
+							self.strings.cmd_not_recognized(terminal, line.trim());
+							terminal.newline();
 						}
 					},
 					_ => ()
@@ -162,7 +167,7 @@ impl PromptBuffer {
 
 								let result = {
 									let matcher = CliLineMatcher::new(&line, LineMatcherMode::AutocompleteOnly);
-									let mut executor = CliExecutor::new(matcher, terminal);
+									let mut executor = CliExecutor::new(matcher, &*self.strings, terminal);
 									call_commands(&mut executor);
 									executor.close().finish()
 								};
@@ -268,14 +273,4 @@ impl PromptBuffer {
 
 		PromptEvent::Ok
 	}
-
-	/*
-	fn buffer_as_str(&self) -> Option<&str> {
-		str::from_utf8(self.line_buffer.as_slice()).ok()
-	}
-
-	fn buffer_as_string(&self) -> Option<String> {
-		String::from_utf8(self.line_buffer.clone()).ok()
-	}
-	*/
 }

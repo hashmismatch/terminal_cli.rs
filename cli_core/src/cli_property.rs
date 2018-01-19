@@ -1,5 +1,6 @@
 use prelude::v1::*;
 use terminal::*;
+use i18n::Strings;
 
 pub enum PropertyCommandStyle {
 	DelimitedGetSet
@@ -20,7 +21,8 @@ impl<'b, V> PropertyContext<'b, V> {
             },
             &mut PropertyContext::Set(ref mut set) => {
                 *property_value = set.value;
-				set.common.terminal.print_line("Value set.");
+				set.common.strings.property_value_set(set.common.terminal, &set.common.id, &set.value);
+				set.common.terminal.newline();
             }
 	    }
 	}
@@ -50,7 +52,8 @@ pub struct PropertyContextCommon<'b> {
 	pub terminal: &'b mut CharacterTerminalWriter,
 	pub current_path: &'b str,
 	pub id: Cow<'b, str>,
-	pub style: PropertyCommandStyle
+	pub style: PropertyCommandStyle,
+	pub strings: &'b Strings
 }
 
 impl<'b> PropertyContextCommon<'b> {

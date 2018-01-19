@@ -22,6 +22,10 @@ pub trait CharacterTerminalWriter : FmtWrite {
 		self.print_str(s);
 		Ok(())
 	}
+
+	fn newline(&mut self) {
+		self.print_newline_sequence()
+	}
 	
 	fn print_newline_sequence(&mut self) {
 		self.print_str("\r\n");

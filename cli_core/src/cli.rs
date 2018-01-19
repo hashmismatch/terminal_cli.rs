@@ -4,6 +4,7 @@ use terminal::*;
 use autocomplete::*;
 use cli_property::*;
 use cli_command::*;
+use super::i18n::Strings;
 
 pub trait CliContext<'a> {
 	/// Creates a new prefixed execution context, but only if the current line matches. Reduces the
@@ -21,6 +22,7 @@ pub trait CliContext<'a> {
 /// Helper for matching commands and properties against an input line.
 pub struct CliExecutor<'a> {
 	matcher: CliLineMatcher<'a>,
+	strings: &'a Strings,
 	terminal: &'a mut CharacterTerminalWriter
 }
 
@@ -79,7 +81,8 @@ impl<'a> CliContext<'a> for CliExecutor<'a> {
 					terminal: self.terminal,
 					current_path: "",
 					id: property_id,
-					style: PropertyCommandStyle::DelimitedGetSet
+					style: PropertyCommandStyle::DelimitedGetSet,
+					strings: &*self.strings
 				}
 			}));
 		}
@@ -99,13 +102,27 @@ impl<'a> CliContext<'a> for CliExecutor<'a> {
 							terminal: self.terminal,
 							current_path: "",
 							id: property_id,
-							style: PropertyCommandStyle::DelimitedGetSet
+							style: PropertyCommandStyle::DelimitedGetSet,
+							strings: &*self.strings
 						},
 						value: val
 					}));
 				},
 				Err(e) => {
-					self.terminal.print_line(&format!("Couldn't parse the value: {}", e));
+
+					match e {
+						PropertyValidationError::InvalidInput => {
+							self.strings.property_invalid_value(self.terminal, &property_id, &args);
+						},
+						PropertyValidationError::ValueTooSmall { min, val } => {
+							self.strings.property_value_too_small(self.terminal, &property_id, &val, &min);
+						},
+						PropertyValidationError::ValueTooBig { max, val } => {
+							self.strings.property_value_too_big(self.terminal, &property_id, &val, &max);
+						}
+					}
+
+					self.terminal.newline();
 				}
 			}
 		}
@@ -115,9 +132,10 @@ impl<'a> CliContext<'a> for CliExecutor<'a> {
 }
 
 impl<'a> CliExecutor<'a> {
-	pub fn new<T: CharacterTerminalWriter>(matcher: CliLineMatcher<'a>, terminal: &'a mut T) -> Self {
+	pub fn new<T: CharacterTerminalWriter>(matcher: CliLineMatcher<'a>, strings: &'a Strings, terminal: &'a mut T) -> Self {
 		CliExecutor {
 			matcher: matcher,
+			strings: strings,
 			terminal: terminal
 		}
 	}
