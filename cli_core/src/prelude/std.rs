@@ -20,3 +20,4 @@ pub use std::io;
 pub use std::io::Write;
 pub use std::str;
 pub use std::ops::Index;
+pub use std::ops::{Deref, DerefMut};

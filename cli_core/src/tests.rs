@@ -15,6 +15,10 @@ pub fn test_suggest() {
 		command: "stat".into(),
 		help: None
 	};
+	let cmd4_args = CliCommand {
+		command: "exec_args ".into(),
+		help: None
+	};
 
 
 	let mut get_matcher = |l, m| { CliLineMatcher::new(l, m) };
@@ -69,5 +73,16 @@ pub fn test_suggest() {
 		matcher.match_cmd(&cmd1);
 		let finish = matcher.finish();
 		println!("finish: {:?}", finish);
+	}
+
+	{
+		let mut matcher = get_matcher("exec_args 1", LineMatcherMode::Execute);
+		matcher.match_cmd(&cmd4_args);
+		if let LineBufferResult::Match { args } = matcher.finish() {
+			assert_eq!("1", args);
+		} else {
+			panic!("should match");
+		}
+		
 	}
 }

@@ -1,5 +1,6 @@
 use prelude::v1::*;
 
+
 /// A naive implementation. Can be implemented with a trie, but it's overkill here.
 /// http://en.wikipedia.org/wiki/LCP_array
 pub fn longest_common_prefix<'a>(strings: &'a [&'a str]) -> Option<&'a str> {

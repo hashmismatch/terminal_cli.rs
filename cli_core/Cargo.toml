@@ -1,0 +1,18 @@
+[package]
+name = "terminal_cli"
+version = "0.2.0"
+license = "MIT/Apache-2.0"
+readme = "../README.md"
+authors = [ "Rudi Benkovic <rudi.benkovic@gmail.com>" ]
+repository = "https://github.com/hashmismatch/terminal_cli.rs"
+homepage = "https://github.com/hashmismatch/terminal_cli.rs"
+description = """
+A standalone library with no-std support for command line 
+terminal interfaces. With autocomplete support, helpers for commands and properties
+and a prompt implementation.
+"""
+
+[features]
+default = ["std"]
+std = []
+no_std = []

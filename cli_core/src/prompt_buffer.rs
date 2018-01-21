@@ -5,8 +5,11 @@ use keys::*;
 use terminal::*;
 use utils::*;
 
+use i18n::*;
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PromptEvent {
+	Ok,
 	Break
 }
 
@@ -22,21 +25,23 @@ pub struct PromptBuffer {
 	current_path: Vec<String>,
 	path_separator: char,
 	autocomplete: AutocompleteRequest,
-	options: PromptBufferOptions
+	options: PromptBufferOptions,
+	strings: Box<Strings>
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum NewlineSequence {
 	Newline,
-	CarriageReturn
+	CarriageReturn,
+	NewlineOrCarriageReturn
 }
 
 /// Options for the prompt buffer
 pub struct PromptBufferOptions {
 	/// Prompt sequence to be printed after every newline
-	pub prompt: String,
+	pub prompt: Cow<'static, str>,
 	/// Newline sequence to be used while writing
-	pub newline: String,
+	pub newline: Cow<'static, str>,
 	/// Maximum size of the line buffer
 	pub max_line_length: usize,
 	/// Echo the typed characters?
@@ -53,7 +58,7 @@ impl Default for PromptBufferOptions {
 			echo: true,
 			newline: "\r\n".into(),
 			max_line_length: 512,
-			newline_key_sequence: NewlineSequence::Newline
+			newline_key_sequence: NewlineSequence::NewlineOrCarriageReturn
 		}
 	}
 }
@@ -67,7 +72,8 @@ impl PromptBuffer {
 			current_path: vec![],
 			path_separator: '/',
 			autocomplete: AutocompleteRequest::None,
-			options: options
+			options: options,
+			strings: Box::new(English)
 		}
 	}
 	
@@ -94,9 +100,17 @@ impl PromptBuffer {
 		}
 	}
 
+	/// Handle a single key from a terminal. Blocks until the terminal implementation returns a key.
+	pub fn handle_terminal_key<T, F: FnOnce(&mut CliExecutor) -> ()>(&mut self, terminal: &mut T, call_commands: F) -> Result<PromptEvent, TerminalError>
+		where T: CharacterTerminalWriter + CharacterTerminalReader + FmtWrite
+	{
+		let key = terminal.read()?;
+		Ok(self.handle_key(key, terminal, call_commands))
+	}
+
 	/// Handle the incoming key press. Pass the lambda that will match the commands for
 	/// autocomplete or execution.
-	pub fn handle_key<T, F: FnOnce(&mut CliExecutor) -> ()>(&mut self, key: Key, terminal: &mut T, call_commands: F) -> Option<PromptEvent>
+	pub fn handle_key<T, F: FnOnce(&mut CliExecutor) -> ()>(&mut self, key: Key, terminal: &mut T, call_commands: F) -> PromptEvent
 		where T: CharacterTerminalWriter + FmtWrite
 	{
 		let mut handled_autocomplete = false;
@@ -104,7 +118,10 @@ impl PromptBuffer {
 		let is_line_finished = {
 			match self.options.newline_key_sequence {
 				NewlineSequence::Newline => key == Key::Newline,
-				NewlineSequence::CarriageReturn => key == Key::CarriageReturn
+				NewlineSequence::CarriageReturn => key == Key::CarriageReturn,
+				NewlineSequence::NewlineOrCarriageReturn => {
+					key == Key::Newline || key == Key::CarriageReturn
+				}
 			}
 		};
 
@@ -116,15 +133,18 @@ impl PromptBuffer {
 				
 				let result = {
 					let mut matcher = CliLineMatcher::new(&line, LineMatcherMode::Execute);
-					let mut executor = CliExecutor::new(matcher, terminal);
+					let mut executor = CliExecutor::new(matcher, &*self.strings, terminal);
 					call_commands(&mut executor);
 					executor.close().finish()
 				};
 
 				match result {
 					LineBufferResult::NoMatchFound => {
-						// command not recognized
-						terminal.print_line("Command not recognized.");
+						if line.trim().len() > 0 {
+							// command not recognized
+							self.strings.cmd_not_recognized(terminal, line.trim());
+							terminal.newline();
+						}
 					},
 					_ => ()
 				}
@@ -147,7 +167,7 @@ impl PromptBuffer {
 
 								let result = {
 									let matcher = CliLineMatcher::new(&line, LineMatcherMode::AutocompleteOnly);
-									let mut executor = CliExecutor::new(matcher, terminal);
+									let mut executor = CliExecutor::new(matcher, &*self.strings, terminal);
 									call_commands(&mut executor);
 									executor.close().finish()
 								};
@@ -220,7 +240,7 @@ impl PromptBuffer {
 				},
 				Key::Break => {
 					if self.line_buffer.len() == 0 {
-						return Some(PromptEvent::Break);
+						return PromptEvent::Break;
 					}
 
 					// clear the line
@@ -229,7 +249,7 @@ impl PromptBuffer {
 					self.print_prompt(terminal);
 				},
 				Key::Eot => {
-					return Some(PromptEvent::Break);
+					return PromptEvent::Break;
 				},
 				Key::Arrow(_) => {
 					// todo: line history?
@@ -251,16 +271,6 @@ impl PromptBuffer {
 			self.autocomplete = AutocompleteRequest::None;
 		}		
 
-		None
+		PromptEvent::Ok
 	}
-
-	/*
-	fn buffer_as_str(&self) -> Option<&str> {
-		str::from_utf8(self.line_buffer.as_slice()).ok()
-	}
-
-	fn buffer_as_string(&self) -> Option<String> {
-		String::from_utf8(self.line_buffer.clone()).ok()
-	}
-	*/
 }

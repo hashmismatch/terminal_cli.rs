@@ -96,6 +96,9 @@ impl<'a> CliLineMatcher<'a> {
 		}
 	}
 
+	pub fn get_mode(&self) -> LineMatcherMode {
+		self.mode
+	}
 
 	pub fn set_line_prefix(&mut self, prefix: String) {
 		self.line_prefix = Some(prefix);
@@ -104,6 +107,16 @@ impl<'a> CliLineMatcher<'a> {
     pub fn get_state(&self) -> &LineBufferResult {
         &self.state
     }
+
+	pub fn starts_with(&self, cmd: &str) -> bool {
+		self.line_trimmed.starts_with(cmd)
+	}
+
+	pub fn add_unmatched_prefix(&mut self, prefix: &str) {
+		if self.mode == LineMatcherMode::AutocompleteOnly {
+			self.match_cmd_str(prefix, None);
+		}
+	} 
 
 	/// Match the command, mutates the internal state of the matching
 	pub fn match_cmd<'b>(&mut self, cmd: &'b CliCommand<'b>) -> LineMatcherProgress {
@@ -145,8 +158,9 @@ impl<'a> CliLineMatcher<'a> {
 		   self.line.len() >= c &&
 		   self.line.starts_with(&*cmd) &&
 		   (cmd_ends_with_sep || at_sep == None || at_sep == Some(' '))
-		{
-			let args = self.line.chars().skip(cmd.len() + 1).collect();
+		{			
+			let args: String = self.line.chars().skip(cmd.len()).collect();
+			let args = args.trim_left().to_string();
 			self.state = LineBufferResult::Match { args: args };
 			return LineMatcherProgress::MatchFound;
 		} else if self.mode == LineMatcherMode::AutocompleteOnly && cmd.starts_with(self.line) {

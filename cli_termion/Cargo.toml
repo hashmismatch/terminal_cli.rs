@@ -1,0 +1,17 @@
+[package]
+name = "terminal_cli_termion"
+version = "0.1.0"
+license = "MIT/Apache-2.0"
+description = """
+Termion support for the terminal_cli crate.
+"""
+authors = ["Rudi Benkovic <rudi.benkovic@gmail.com>"]
+
+[dependencies]
+terminal_cli = "0.2.0"
+# windows support
+#termion = { git = "https://github.com/mcgoo/termion", rev = "583070b" }
+termion = "^1.5.1"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2.8"
