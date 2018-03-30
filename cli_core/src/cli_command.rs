@@ -20,6 +20,11 @@ impl<'b> CommandContext<'b> {
 	}
 
 	#[inline]
+	pub fn get_terminal_write(&mut self) -> &mut FmtWrite {
+		&mut self.terminal
+	}
+
+	#[inline]
 	pub fn get_current_path(&self) -> &str {
 		&self.current_path
 	}

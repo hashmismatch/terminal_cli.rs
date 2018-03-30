@@ -134,6 +134,11 @@ impl<'a> CliExecutor<'a> {
 	pub fn get_terminal(&mut self) -> &mut CharacterTerminalWriter {
 		self.terminal
 	}
+
+	/// Get the associated terminal as a writer
+	pub fn get_terminal_write(&mut self) -> &mut FmtWrite {
+		&mut self.terminal
+	}
 }
 
 impl<'a> Deref for CliExecutor<'a> {
