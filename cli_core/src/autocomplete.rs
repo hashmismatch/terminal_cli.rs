@@ -139,7 +139,7 @@ impl<'a> CliLineMatcher<'a> {
 	}
 
     /// Match the string, mutates the internal state
-	pub fn match_cmd_str<'b>(&mut self, cmd: &'b str, prefix: Option<&'b str>) -> LineMatcherProgress {
+	pub fn match_cmd_str<'b>(&mut self, cmd: &'b str, _prefix: Option<&'b str>) -> LineMatcherProgress {
 		match self.state {
             LineBufferResult::MoreInputRequired { .. } => (),
             _ => { return LineMatcherProgress::Skipped; }
@@ -160,8 +160,8 @@ impl<'a> CliLineMatcher<'a> {
 		   (cmd_ends_with_sep || at_sep == None || at_sep == Some(' '))
 		{			
 			let args: String = self.line.chars().skip(cmd.len()).collect();
-			let args = args.trim_left().to_string();
-			self.state = LineBufferResult::Match { args: args };
+			let args = args.trim_start().to_string();
+			self.state = LineBufferResult::Match { args };
 			return LineMatcherProgress::MatchFound;
 		} else if self.mode == LineMatcherMode::AutocompleteOnly && cmd.starts_with(self.line) {
 

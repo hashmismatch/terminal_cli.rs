@@ -21,7 +21,7 @@ pub fn test_suggest() {
 	};
 
 
-	let mut get_matcher = |l, m| { CliLineMatcher::new(l, m) };
+	let get_matcher = |l, m| { CliLineMatcher::new(l, m) };
 
 	{
 		let mut matcher = get_matcher("", LineMatcherMode::Execute);

@@ -47,7 +47,7 @@ pub struct PropertyContextSet<'b, V> {
 
 pub struct PropertyContextCommon<'b> {
 	pub args: Cow<'b, str>,
-	pub terminal: &'b mut CharacterTerminalWriter,
+	pub terminal: &'b mut dyn CharacterTerminalWriter,
 	pub current_path: &'b str,
 	pub id: Cow<'b, str>,
 	pub style: PropertyCommandStyle
@@ -60,7 +60,7 @@ impl<'b> PropertyContextCommon<'b> {
 	}
 
 	#[inline]
-	pub fn get_terminal(&mut self) -> &mut CharacterTerminalWriter {
+	pub fn get_terminal(&mut self) -> &mut dyn CharacterTerminalWriter {
 		self.terminal
 	}
 

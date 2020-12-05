@@ -119,7 +119,7 @@ impl PromptBuffer {
 			if let Ok(line) = str::from_utf8(self.line_buffer.as_slice()) {
 				
 				let result = {
-					let mut matcher = CliLineMatcher::new(&line, LineMatcherMode::Execute);
+					let matcher = CliLineMatcher::new(&line, LineMatcherMode::Execute);
 					let mut executor = CliExecutor::new(matcher, terminal);
 					call_commands(&mut executor);
 					executor.close().finish()
@@ -176,7 +176,7 @@ impl PromptBuffer {
 												// we could also bleep at this point...
 
 												self.autocomplete = AutocompleteRequest::HaveMultipleOptions {
-													lines: lines
+													lines
 												};
 											}
 										}
@@ -201,7 +201,10 @@ impl PromptBuffer {
 							terminal.print_line("");
 							
 							let suggestions = lines.iter().map(|l| { l.get_display() }).collect::<Vec<&str>>();
-							format_in_columns(suggestions.as_slice(), 80, 4, &self.options.newline, terminal);
+							match format_in_columns(suggestions.as_slice(), 80, 4, &self.options.newline, terminal) {
+								Err(_) => terminal.print_line("Error formating the columns."),
+								_ => ()
+							}
 
 							self.print_prompt(terminal);
 

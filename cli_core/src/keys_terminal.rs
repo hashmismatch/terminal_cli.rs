@@ -19,8 +19,6 @@ impl KeyDecoder for TerminalKeyDecoder {
 	fn decode(&mut self, byte: u8) -> Result<Key, KeyDecoderError> {
 		self.buffer.push(byte);
 
-		let mut more_input_required = false;
-
 		let r = match self.buffer[0] {
 			// ESC
 			0x1B => {

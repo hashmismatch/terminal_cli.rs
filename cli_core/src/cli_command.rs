@@ -4,7 +4,7 @@ use terminal::*;
 /// Context for the execution of the command
 pub struct CommandContext<'b> {
 	pub args: Cow<'b, str>,
-	pub terminal: &'b mut CharacterTerminalWriter,
+	pub terminal: &'b mut dyn CharacterTerminalWriter,
 	pub current_path: &'b str
 }
 
@@ -15,12 +15,12 @@ impl<'b> CommandContext<'b> {
 	}
 
 	#[inline]
-	pub fn get_terminal(&mut self) -> &mut CharacterTerminalWriter {
+	pub fn get_terminal(&mut self) -> &mut dyn CharacterTerminalWriter {
 		self.terminal
 	}
 
 	#[inline]
-	pub fn get_terminal_write(&mut self) -> &mut FmtWrite {
+	pub fn get_terminal_write(&mut self) -> &mut dyn FmtWrite {
 		&mut self.terminal
 	}
 

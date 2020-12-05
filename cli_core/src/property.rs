@@ -8,10 +8,6 @@ pub enum PropertyValidationError<T> {
 	ValueTooBig { max: T, val: T }
 }
 
-pub struct PropertyError {
-	validation_error: Box<Display>
-}
-
 impl<T: Display> Display for PropertyValidationError<T> {
 	fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
 		match self {
@@ -83,8 +79,8 @@ pub struct ValueInputWithValidation<T, I, V> where I: ValueInput<T>, V: ValueInp
 }
 impl<T, I, V> ValueInput<T> for ValueInputWithValidation<T, I, V> where I: ValueInput<T>, V: ValueInputValidate<T> {
 	fn input(&self, s: &str) -> Result<T, PropertyValidationError<T>> {
-		let val = try!(self.input.input(s));
-		try!(self.validate.validate(&val));
+		let val = self.input.input(s)?;
+		self.validate.validate(&val)?;
 		Ok(val)
 	}
 }
@@ -119,8 +115,8 @@ pub struct ValueCombineValidators<T, A, B> where A: ValueInputValidate<T>, B: Va
 
 impl<T, A, B> ValueInputValidate<T> for ValueCombineValidators<T, A, B> where A: ValueInputValidate<T>, B: ValueInputValidate<T> {
 	fn validate(&self, val: &T) -> Result<(), PropertyValidationError<T>> {
-		try!(self.a.validate(val));
-		try!(self.b.validate(val));
+		self.a.validate(val)?;
+		self.b.validate(val)?;
 		Ok(())
 	}
 }
@@ -133,6 +129,6 @@ pub fn validate_property_min_max<T>(min: T, max: T) -> ValueInputWithValidation<
 	let min = ValueMin { min: min };
 	let max = ValueMax { max: max };
 	let validate = ValueCombineValidators { t: PhantomData, a: min, b: max };
-	let input = ValueInputWithValidation { t: PhantomData, input: ValueInputFromStr, validate: validate };
+	let input = ValueInputWithValidation { t: PhantomData, input: ValueInputFromStr, validate };
 	input
 }

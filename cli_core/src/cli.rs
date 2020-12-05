@@ -21,7 +21,7 @@ pub trait CliContext<'a> {
 /// Helper for matching commands and properties against an input line.
 pub struct CliExecutor<'a> {
 	matcher: CliLineMatcher<'a>,
-	terminal: &'a mut CharacterTerminalWriter
+	terminal: &'a mut dyn CharacterTerminalWriter
 }
 
 impl<'a> CliContext<'a> for CliExecutor<'a> {	
@@ -117,8 +117,8 @@ impl<'a> CliContext<'a> for CliExecutor<'a> {
 impl<'a> CliExecutor<'a> {
 	pub fn new<T: CharacterTerminalWriter>(matcher: CliLineMatcher<'a>, terminal: &'a mut T) -> Self {
 		CliExecutor {
-			matcher: matcher,
-			terminal: terminal
+			matcher,
+			terminal
 		}
 	}
 
@@ -131,20 +131,20 @@ impl<'a> CliExecutor<'a> {
 	
 
 	/// Get the associated terminal.
-	pub fn get_terminal(&mut self) -> &mut CharacterTerminalWriter {
+	pub fn get_terminal(&mut self) -> &mut dyn CharacterTerminalWriter {
 		self.terminal
 	}
 
 	/// Get the associated terminal as a writer
-	pub fn get_terminal_write(&mut self) -> &mut FmtWrite {
+	pub fn get_terminal_write(&mut self) -> &mut dyn FmtWrite {
 		&mut self.terminal
 	}
 }
 
 impl<'a> Deref for CliExecutor<'a> {
-	type Target = &'a mut CharacterTerminalWriter;
+	type Target = &'a mut dyn CharacterTerminalWriter;
 
-    fn deref<'b>(&'b self) -> &'b &'a mut CharacterTerminalWriter {
+    fn deref<'b>(&'b self) -> &'b &'a mut dyn CharacterTerminalWriter {
         &self.terminal
     }
 }

@@ -81,12 +81,12 @@ pub fn format_in_columns<W: FmtWrite>(strings: &[&str], width: u16, spacing: u16
 		for j in 0..columns {			
 			let pos = (j as usize * rows as usize) + i as usize;
 			if let Some(s) = strings.get(pos) {
-				try!(write.write_str(&s));
+				write.write_str(&s)?;
 
 				if j < columns-1 {
 					let spaces = (max_len - s.len() as u16) + spacing;
-					for i in 0..spaces {
-						try!(write.write_str(" "));
+					for _ in 0..spaces {
+						write.write_str(" ")?;
 					}
 				}
 			}
@@ -100,7 +100,6 @@ pub fn format_in_columns<W: FmtWrite>(strings: &[&str], width: u16, spacing: u16
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use prelude::v1::*;
 
 	#[test]
 	fn test_lcp() {
