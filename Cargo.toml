@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "cli_core",
-    "terminal_termion"
+    #"terminal_termion",
+    "terminal_crossterm"
 ]
