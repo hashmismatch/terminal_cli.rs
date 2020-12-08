@@ -16,14 +16,14 @@ pub use core::ops::Index;
 
 pub use alloc::rc::Rc;
 pub use alloc::boxed::Box;
-pub use alloc::arc::{Arc, Weak};
+//pub use alloc::arc::{Arc, Weak};
 pub use alloc::vec::Vec;
 pub use alloc::string::*;
 pub use alloc::borrow::Cow;
 pub use alloc::fmt::{Display, Formatter};
 pub use alloc::str::FromStr;
 pub use alloc::str;
-pub use alloc::slice::SliceConcatExt;
+//pub use alloc::slice::SliceConcatExt;
 
 
 use core::intrinsics;
